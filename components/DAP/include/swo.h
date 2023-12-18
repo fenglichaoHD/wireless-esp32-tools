@@ -1,7 +1,9 @@
 #ifndef __SWO_H__
 #define __SWO_H__
 
-typedef void * EventGroupHandle_t;
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
 
 // event group bits
 #define SWO_GOT_DATA 0x00000001

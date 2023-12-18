@@ -44,9 +44,7 @@
 #include "components/DAP/include/swo.h"
 
 #include "esp_err.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
+
 
 
 EventGroupHandle_t kSwoThreadEventGroup;
