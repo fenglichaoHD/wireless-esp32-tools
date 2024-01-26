@@ -34,29 +34,11 @@ static struct {
 #define DAP_IP_ADDRESS 192, 168, 137, 123
 #define DAP_IP_GATEWAY 192, 168, 137, 1
 #define DAP_IP_NETMASK 255, 255, 255, 0
-//
 
-#define USE_OTA              0
-
-#define USE_UART_BRIDGE      0
-#define UART_BRIDGE_PORT     1234
-#define UART_BRIDGE_BAUDRATE 74880
-//
-
-// DO NOT CHANGE
-#define USE_TCP_NETCONN 0
 
 #define PORT                3240
 #define CONFIG_EXAMPLE_IPV4 1
-#define USE_KCP             0
 #define MTU_SIZE            1500
-//
 
-
-
-extern int printf(const char *, ...);
-inline int os_printf(const char *__restrict __fmt, ...)  {
-    return printf(__fmt, __builtin_va_arg_pack());
-}
 
 #endif

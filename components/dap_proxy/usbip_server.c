@@ -3,15 +3,12 @@
 
 #include "usbip_server.h"
 #include "DAP_handle.h"
-#include "main/wifi_configuration.h"
 
 #include "components/USBIP/usb_handle.h"
 #include "components/USBIP/usb_descriptor.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include <lwip/netdb.h>
 
 
 // attach helper function
@@ -56,7 +53,7 @@ int attach(uint8_t *buffer, uint32_t length)
         break;
 
     default:
-        os_printf("attach Unknown command: %d\r\n", command);
+	    printf("attach Unknown command: %d\r\n", command);
         break;
     }
     return 0;
@@ -74,19 +71,19 @@ static int read_stage1_command(uint8_t *buffer, uint32_t length)
 
 static void handle_device_list(uint8_t *buffer, uint32_t length)
 {
-    os_printf("Handling dev list request...\r\n");
+	printf("Handling dev list request...\r\n");
     send_stage1_header(USBIP_STAGE1_CMD_DEVICE_LIST, 0);
     send_device_list();
 }
 
 static void handle_device_attach(uint8_t *buffer, uint32_t length)
 {
-    os_printf("Handling dev attach request...\r\n");
+	printf("Handling dev attach request...\r\n");
 
     //char bus[USBIP_BUSID_SIZE];
     if (length < sizeof(USBIP_BUSID_SIZE))
     {
-        os_printf("handle device attach failed!\r\n");
+	    printf("handle device attach failed!\r\n");
         return;
     }
     //client.readBytes((uint8_t *)bus, USBIP_BUSID_SIZE);
@@ -100,7 +97,7 @@ static void handle_device_attach(uint8_t *buffer, uint32_t length)
 
 static void send_stage1_header(uint16_t command, uint32_t status)
 {
-    os_printf("Sending header...\r\n");
+	printf("Sending header...\r\n");
     usbip_stage1_header header;
     header.version = htons(273); ////TODO:  273???
     // may be : https://github.com/Oxalin/usbip_windows/issues/4
@@ -113,10 +110,10 @@ static void send_stage1_header(uint16_t command, uint32_t status)
 
 static void send_device_list()
 {
-    os_printf("Sending device list...\r\n");
+	printf("Sending device list...\r\n");
 
     // send device list size:
-    os_printf("Sending device list size...\r\n");
+	printf("Sending device list size...\r\n");
     usbip_stage1_response_devlist response_devlist;
 
     // we have only 1 device, so:
@@ -136,7 +133,7 @@ static void send_device_list()
 
 static void send_device_info()
 {
-    os_printf("Sending device info...\r\n");
+	printf("Sending device info...\r\n");
     usbip_stage1_usb_device device;
 
     strcpy(device.path, "/sys/devices/pci0000:00/0000:00:01.2/usb1/1-1");
@@ -163,7 +160,7 @@ static void send_device_info()
 
 static void send_interface_info()
 {
-    os_printf("Sending interface info...\r\n");
+	printf("Sending interface info...\r\n");
     usbip_stage1_usb_interface interface;
     interface.bInterfaceClass = USBD_CUSTOM_CLASS0_IF0_CLASS;
     interface.bInterfaceSubClass = USBD_CUSTOM_CLASS0_IF0_SUBCLASS;
@@ -207,7 +204,7 @@ int emulate(uint8_t *buffer, uint32_t length)
         break;
 
     default:
-        os_printf("emulate unknown command:%d\r\n", command);
+	    printf("emulate unknown command:%d\r\n", command);
         //handle_submit((usbip_stage2_header *)buffer, length);
         return -1;
     }
@@ -317,16 +314,16 @@ static int handle_submit(usbip_stage2_header *header, uint32_t length)
     case 0x81:
         if (header->base.direction == 0)
         {
-            os_printf("*** WARN! EP 81 DATA TX");
+	        printf("*** WARN! EP 81 DATA TX");
         }
         else
         {
-            os_printf("*** WARN! EP 81 DATA RX");
+	        printf("*** WARN! EP 81 DATA RX");
         }
         return -1;
 
     default:
-        os_printf("*** WARN ! UNKNOWN ENDPOINT: %d\r\n", (int)header->base.ep);
+	    printf("*** WARN ! UNKNOWN ENDPOINT: %d\r\n", (int) header->base.ep);
         return -1;
     }
     return 0;
@@ -377,7 +374,7 @@ void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *c
 
 static void handle_unlink(usbip_stage2_header *header)
 {
-    os_printf("s2 handling cmd unlink...\r\n");
+	printf("s2 handling cmd unlink...\r\n");
     handle_dap_unlink();
     send_stage2_unlink(header);
 }

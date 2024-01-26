@@ -10,7 +10,6 @@
  *
  */
 #include <stdint.h>
-#include <stdbool.h>
 
 #include "components/USBIP/usb_descriptor.h"
 #include "components/USBIP/usb_defs.h"

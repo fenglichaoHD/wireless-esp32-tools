@@ -1,10 +1,6 @@
 #include "components/elaphureLink/elaphureLink_protocol.h"
 
-
 #include "lwip/err.h"
-#include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include <lwip/netdb.h>
 
 extern int kSock;
 extern int usbip_network_send(int s, const void *dataptr, size_t size, int flags);

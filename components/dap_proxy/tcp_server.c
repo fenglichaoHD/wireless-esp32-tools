@@ -17,12 +17,10 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "freertos/event_groups.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 
-extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;
 
 uint8_t kState = ACCEPTING;
@@ -60,10 +58,10 @@ void tcp_server_task(void *pvParameters)
         int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
         if (listen_sock < 0)
         {
-            os_printf("Unable to create socket: errno %d\r\n", errno);
+	        printf("Unable to create socket: errno %d\r\n", errno);
             break;
         }
-        os_printf("Socket created\r\n");
+	    printf("Socket created\r\n");
 
         setsockopt(listen_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
         setsockopt(listen_sock, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
@@ -71,18 +69,18 @@ void tcp_server_task(void *pvParameters)
         int err = bind(listen_sock, (struct sockaddr *)&destAddr, sizeof(destAddr));
         if (err != 0)
         {
-            os_printf("Socket unable to bind: errno %d\r\n", errno);
+	        printf("Socket unable to bind: errno %d\r\n", errno);
             break;
         }
-        os_printf("Socket binded\r\n");
+	    printf("Socket binded\r\n");
 
         err = listen(listen_sock, 1);
         if (err != 0)
         {
-            os_printf("Error occured during listen: errno %d\r\n", errno);
+	        printf("Error occured during listen: errno %d\r\n", errno);
             break;
         }
-        os_printf("Socket listening\r\n");
+	    printf("Socket listening\r\n");
 
 #ifdef CONFIG_EXAMPLE_IPV6
         struct sockaddr_in6 sourceAddr; // Large enough for both IPv4 or IPv6
@@ -95,12 +93,12 @@ void tcp_server_task(void *pvParameters)
             kSock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
             if (kSock < 0)
             {
-                os_printf("Unable to accept connection: errno %d\r\n", errno);
+	            printf("Unable to accept connection: errno %d\r\n", errno);
                 break;
             }
             setsockopt(kSock, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
             setsockopt(kSock, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
-            os_printf("Socket accepted\r\n");
+	        printf("Socket accepted\r\n");
 
             while (1)
             {
@@ -108,13 +106,13 @@ void tcp_server_task(void *pvParameters)
                 // Error occured during receiving
                 if (len < 0)
                 {
-                    os_printf("recv failed: errno %d\r\n", errno);
+	                printf("recv failed: errno %d\r\n", errno);
                     break;
                 }
                 // Connection closed
                 else if (len == 0)
                 {
-                    os_printf("Connection closed\r\n");
+	                printf("Connection closed\r\n");
                     break;
                 }
                 // Data received
@@ -159,14 +157,14 @@ void tcp_server_task(void *pvParameters)
                         el_dap_data_process(tcp_rx_buffer, len);
                         break;
                     default:
-                        os_printf("unkonw kstate!\r\n");
+	                    printf("unkonw kstate!\r\n");
                     }
                 }
             }
             // kState = ACCEPTING;
             if (kSock != -1)
             {
-                os_printf("Shutting down socket and restarting...\r\n");
+	            printf("Shutting down socket and restarting...\r\n");
                 //shutdown(kSock, 0);
                 close(kSock);
                 if (kState == EMULATING || kState == EL_DATA_PHASE)
@@ -176,8 +174,6 @@ void tcp_server_task(void *pvParameters)
                 el_process_buffer_free();
 
                 kRestartDAPHandle = RESET_HANDLE;
-                if (kDAPTaskHandle)
-                    xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);

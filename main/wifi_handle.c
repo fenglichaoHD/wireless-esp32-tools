@@ -57,13 +57,13 @@ static void event_handler(void *handler_arg __attribute__((unused)),
 	    ip_event_got_ip_t *event = event_data;
 //	    GPIO_SET_LEVEL_HIGH(PIN_LED_WIFI_STATUS);
         xEventGroupSetBits(wifi_event_group, IPV4_GOTIP_BIT);
-        os_printf("SYSTEM EVENT STA GOT IP : %s\r\n", ip4addr_ntoa((const ip4_addr_t *) &event->ip_info.ip));
+	    printf("SYSTEM EVENT STA GOT IP : %s\r\n", ip4addr_ntoa((const ip4_addr_t *) &event->ip_info.ip));
         break;
 	}
     case WIFI_EVENT_STA_DISCONNECTED: {
 	    wifi_event_sta_disconnected_t *event = event_data;
 //	    GPIO_SET_LEVEL_LOW(PIN_LED_WIFI_STATUS);
-	    os_printf("Disconnect reason : %d\r\n", event->reason);
+	    printf("Disconnect reason : %d\r\n", event->reason);
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
         if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
@@ -78,9 +78,6 @@ static void event_handler(void *handler_arg __attribute__((unused)),
         xEventGroupClearBits(wifi_event_group, IPV6_GOTIP_BIT);
 #endif
 
-#if (USE_UART_BRIDGE == 1)
-        uart_bridge_close();
-#endif
         break;
 	}
     case IP_EVENT_GOT_IP6: {
@@ -123,9 +120,9 @@ static void wait_for_ip() {
     uint32_t bits = IPV4_GOTIP_BIT;
 #endif
 
-    os_printf("Waiting for AP connection...\r\n");
+	printf("Waiting for AP connection...\r\n");
     xEventGroupWaitBits(wifi_event_group, bits, false, true, portMAX_DELAY);
-    os_printf("Connected to AP\r\n");
+	printf("Connected to AP\r\n");
 }
 
 void wifi_init(void) {

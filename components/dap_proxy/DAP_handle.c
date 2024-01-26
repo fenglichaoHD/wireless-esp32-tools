@@ -17,11 +17,7 @@
 #include "usbip_server.h"
 #include "DAP_handle.h"
 #include "main/dap_configuration.h"
-#include "main/wifi_configuration.h"
-
-#include "components/USBIP/usb_descriptor.h"
 #include "cmsis-dap/include/DAP.h"
-#include "cmsis-dap/include/swo.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -30,14 +26,8 @@
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include <lwip/netdb.h>
 
-#if ((USE_MDNS == 1) || (USE_OTA == 1))
-    #define DAP_BUFFER_NUM 10
-#else
-    #define DAP_BUFFER_NUM 20
-#endif
+#define DAP_BUFFER_NUM 10
 
 #if (USE_WINUSB == 1)
 typedef struct
@@ -54,9 +44,6 @@ typedef struct
 
 #define DAP_HANDLE_SIZE (sizeof(DapPacket_t))
 
-
-extern int kSock;
-extern TaskHandle_t kDAPTaskHandle;
 
 int kRestartDAPHandle = NO_SIGNAL;
 
@@ -116,13 +103,11 @@ void handle_dap_data_request(usbip_stage2_header *header, uint32_t length)
     // always send constant size buf -> cuz we don't care about the IN packet size
     // and to unify the style, we set aside the length of the section
     xRingbufferSend(dap_dataIN_handle, data_in - sizeof(uint32_t), DAP_HANDLE_SIZE, portMAX_DELAY);
-    xTaskNotifyGive(kDAPTaskHandle);
 
 #else
     send_stage2_submit(header, 0, 0);
 
     xRingbufferSend(dap_dataIN_handle, data_in, DAP_HANDLE_SIZE, portMAX_DELAY);
-    xTaskNotifyGive(kDAPTaskHandle);
 
 #endif
 
@@ -188,7 +173,7 @@ void DAP_Thread(void *argument)
     if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL ||
         data_response_mux == NULL)
     {
-        os_printf("Can not create DAP ringbuf/mux!\r\n");
+	    printf("Can not create DAP ringbuf/mux!\r\n");
         vTaskDelete(NULL);
     }
     for (;;)
@@ -204,7 +189,7 @@ void DAP_Thread(void *argument)
                     malloc_dap_ringbuf();
                     if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL)
                     {
-                        os_printf("Can not create DAP ringbuf/mux!\r\n");
+	                    printf("Can not create DAP ringbuf/mux!\r\n");
                         vTaskDelete(NULL);
                     }
                 }
@@ -230,7 +215,8 @@ void DAP_Thread(void *argument)
 
             else if (packetSize < DAP_HANDLE_SIZE)
             {
-                os_printf("Wrong data in packet size:%d , data in remain: %d\r\n", packetSize, (int)xRingbufferGetMaxItemSize(dap_dataIN_handle));
+	            printf("Wrong data in packet size:%d , data in remain: %d\r\n", packetSize,
+	                   (int) xRingbufferGetMaxItemSize(dap_dataIN_handle));
                 vRingbufferReturnItem(dap_dataIN_handle, (void *)item);
                 break;
                 // This may not happen because there is a semaphore acquisition
@@ -294,7 +280,7 @@ int fast_reply(uint8_t *buf, uint32_t length)
             }
             else if (packetSize > 0)
             {
-                os_printf("Wrong data out packet size:%d!\r\n", packetSize);
+	            printf("Wrong data out packet size:%d!\r\n", packetSize);
             }
             ////TODO: fast reply
         }

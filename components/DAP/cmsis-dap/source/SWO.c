@@ -1,16 +1,3 @@
-/**
- * @file SWO.c
- * @author windowsair
- * @brief SWO support
- * @change: 2021-02-17: Add basic functions
- * @version 0.2
- *
- * @date 2021-02-17
- *
- * @copyright Copyright (c) 2021
- *
- */
-
 /*
  * Copyright (c) 2013-2017 ARM Limited. All rights reserved.
  *
@@ -39,13 +26,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "DAP_config.h"
-#include "cmsis-dap/include/DAP.h"
-#include "cmsis-dap/include/uart_modify.h"
 #include "cmsis-dap/include/swo.h"
-
-#include "esp_err.h"
-
-
 
 EventGroupHandle_t kSwoThreadEventGroup;
 
