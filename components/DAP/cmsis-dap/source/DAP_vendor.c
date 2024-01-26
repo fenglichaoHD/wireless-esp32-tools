@@ -25,8 +25,8 @@
  *
  *---------------------------------------------------------------------------*/
 
-#include "components/DAP/config/DAP_config.h"
-#include "components/DAP/include/DAP.h"
+#include "DAP_config.h"
+#include "cmsis-dap/include/DAP.h"
 
 //**************************************************************************************************
 /**

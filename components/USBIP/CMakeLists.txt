@@ -1,4 +1,7 @@
-set(COMPONENT_ADD_INCLUDEDIRS ". ../../main")
-set(COMPONENT_SRCS "MSOS20_descriptor.c usb_handle.c usb_descriptor.c")
+file(GLOB SOURCES *.c)
 
-register_component()
+idf_component_register(
+        SRCS ${SOURCES}
+        INCLUDE_DIRS "."
+        PRIV_REQUIRES dap_proxy
+)

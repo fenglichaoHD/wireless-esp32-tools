@@ -13,8 +13,8 @@
 #define __GPIO_OP_H__
 
 #include "sdkconfig.h"
-#include "components/DAP/include/cmsis_compiler.h"
-#include "components/DAP/include/gpio_common.h"
+#include "cmsis-dap/include/cmsis_compiler.h"
+#include "cmsis-dap/include/gpio_common.h"
 
 
 

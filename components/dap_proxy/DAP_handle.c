@@ -14,19 +14,19 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "main/usbip_server.h"
-#include "main/DAP_handle.h"
+#include "usbip_server.h"
+#include "DAP_handle.h"
 #include "main/dap_configuration.h"
 #include "main/wifi_configuration.h"
 
 #include "components/USBIP/usb_descriptor.h"
-#include "components/DAP/include/DAP.h"
-#include "components/DAP/include/swo.h"
+#include "cmsis-dap/include/DAP.h"
+#include "cmsis-dap/include/swo.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/ringbuf.h"
-#include "freertos/semphr.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/ringbuf.h>
+#include <freertos/semphr.h>
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"

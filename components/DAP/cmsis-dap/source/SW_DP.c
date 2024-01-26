@@ -25,27 +25,13 @@
  *
  *---------------------------------------------------------------------------*/
 
-/**
- * @file SW_DP.c
- * @author windowsair
- * @brief Adaptation of GPIO and SPI
- * @change:
- *    2021-2-10 Support GPIO and SPI for SWD sequence / SWJ sequence / SWD transfer
- *              Note: SWD sequence not yet tested
- * @version 0.1
- * @date 2021-2-10
- *
- * @copyright Copyright (c) 2021
- *
- */
-
 #include <stdio.h>
 
-#include "components/DAP/config/DAP_config.h"
-#include "components/DAP/include/DAP.h"
-#include "components/DAP/include/spi_op.h"
-#include "components/DAP/include/spi_switch.h"
-#include "components/DAP/include/dap_utility.h"
+#include "DAP_config.h"
+#include "cmsis-dap/include/DAP.h"
+#include "cmsis-dap/include/spi_op.h"
+#include "cmsis-dap/include/spi_switch.h"
+#include "cmsis-dap/include/dap_utility.h"
 
 
 // Debug

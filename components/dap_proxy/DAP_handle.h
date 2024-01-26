@@ -16,5 +16,6 @@ void handle_swo_trace_response(usbip_stage2_header *header);
 void handle_dap_unlink();
 
 int fast_reply(uint8_t *buf, uint32_t length);
+void DAP_Thread(void *argument);
 
 #endif

@@ -25,20 +25,6 @@
  *
  *---------------------------------------------------------------------------*/
 
-/**
- * @file DAP_config.h
- * @author windowsair
- * @brief Adaptation of GPIO and SPI pin
- * @change: 2021-2-10 Support GPIO and SPI
- *          2021-2-18 Try to support SWO
- * @version 0.1
- * @date 2021-2-10
- *
- * @copyright Copyright (c) 2021
- *
- */
-
-
 #ifndef __DAP_CONFIG_H__
 #define __DAP_CONFIG_H__
 
@@ -47,12 +33,12 @@
 
 #include "main/dap_configuration.h"
 #include "main/wifi_configuration.h"
-#include "main/timer.h"
 
-#include "components/DAP/include/cmsis_compiler.h"
-#include "components/DAP/include/gpio_op.h"
-#include "components/DAP/include/spi_switch.h"
+#include "cmsis-dap/include/cmsis_compiler.h"
+#include "cmsis-dap/include/gpio_op.h"
+#include "cmsis-dap/include/spi_switch.h"
 
+#include <soc/rtc.h>
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
   #include "gpio.h"
@@ -811,7 +797,7 @@ default, the DWT timer is used.  The frequency of this timer is configured with 
  */
 __STATIC_INLINE uint32_t TIMESTAMP_GET(void)
 {
-  return get_timer_count();
+  return rtc_time_get();
 }
 
 ///@}

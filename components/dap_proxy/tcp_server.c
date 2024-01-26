@@ -7,29 +7,20 @@
  * @copyright Copyright (c) 2020
  *
  */
-#include <string.h>
 #include <stdint.h>
-#include <sys/param.h>
 
 #include "main/wifi_configuration.h"
-#include "main/usbip_server.h"
-#include "main/DAP_handle.h"
+#include "usbip_server.h"
+#include "DAP_handle.h"
 
 #include "components/elaphureLink/elaphureLink_protocol.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "nvs_flash.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include <lwip/netdb.h>
 
 extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;

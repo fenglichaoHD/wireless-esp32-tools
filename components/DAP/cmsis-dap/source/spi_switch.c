@@ -15,9 +15,9 @@
 
 #include <stdbool.h>
 
-#include "components/DAP/include/cmsis_compiler.h"
-#include "components/DAP/include/spi_switch.h"
-#include "components/DAP/include/gpio_common.h"
+#include "cmsis-dap/include/cmsis_compiler.h"
+#include "cmsis-dap/include/spi_switch.h"
+#include "cmsis-dap/include/gpio_common.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
     #define DAP_SPI SPI1

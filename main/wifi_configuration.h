@@ -15,7 +15,7 @@ static struct {
     const char *ssid;
     const char *password;
 } wifi_list[] __attribute__((unused)) = {
-    {.ssid = "OTA", .password = "12345678"},
+    {.ssid = "MOWiFi_2.4G_A7F0", .password = "00112288"},
     {.ssid = "DAP", .password = "12345678"},
     // Add your WAP like this:
     // {.ssid = "your ssid", .password = "your password"},
@@ -29,7 +29,7 @@ static struct {
 #define MDNS_INSTANCE "DAP mDNS"
 //
 
-#define USE_STATIC_IP 1
+#define USE_STATIC_IP 0
 // If you don't want to specify the ip configuration, then ignore the following items.
 #define DAP_IP_ADDRESS 192, 168, 137, 123
 #define DAP_IP_GATEWAY 192, 168, 137, 1
@@ -52,13 +52,6 @@ static struct {
 #define MTU_SIZE            1500
 //
 
-#if (USE_TCP_NETCONN == 1 && USE_KCP == 1)
-#error Can not use KCP and TCP at the same time!
-#endif
-
-#if (USE_KCP == 1)
-#warning KCP is a very experimental feature, and it should not be used under any circumstances. Please make sure what you are doing. Related usbip version: https://github.com/windowsair/usbip-win
-#endif
 
 
 extern int printf(const char *, ...);

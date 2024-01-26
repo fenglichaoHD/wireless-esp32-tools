@@ -8,9 +8,6 @@
 #endif
 
 #include "main/wifi_configuration.h"
-#include "main/uart_bridge.h"
-
-#include "components/DAP/include/gpio_op.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -58,14 +55,14 @@ static void event_handler(void *handler_arg __attribute__((unused)),
         break;
     case IP_EVENT_STA_GOT_IP: {
 	    ip_event_got_ip_t *event = event_data;
-	    GPIO_SET_LEVEL_HIGH(PIN_LED_WIFI_STATUS);
+//	    GPIO_SET_LEVEL_HIGH(PIN_LED_WIFI_STATUS);
         xEventGroupSetBits(wifi_event_group, IPV4_GOTIP_BIT);
         os_printf("SYSTEM EVENT STA GOT IP : %s\r\n", ip4addr_ntoa((const ip4_addr_t *) &event->ip_info.ip));
         break;
 	}
     case WIFI_EVENT_STA_DISCONNECTED: {
 	    wifi_event_sta_disconnected_t *event = event_data;
-	    GPIO_SET_LEVEL_LOW(PIN_LED_WIFI_STATUS);
+//	    GPIO_SET_LEVEL_LOW(PIN_LED_WIFI_STATUS);
 	    os_printf("Disconnect reason : %d\r\n", event->reason);
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
@@ -132,8 +129,8 @@ static void wait_for_ip() {
 }
 
 void wifi_init(void) {
-    GPIO_FUNCTION_SET(PIN_LED_WIFI_STATUS);
-    GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_WIFI_STATUS);
+//    GPIO_FUNCTION_SET(PIN_LED_WIFI_STATUS);
+//    GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_WIFI_STATUS);
 
 	esp_netif_init();
 	wifi_event_group = xEventGroupCreate();
