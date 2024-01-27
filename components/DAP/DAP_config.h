@@ -32,7 +32,6 @@
 #include <string.h>
 
 #include "main/dap_configuration.h"
-#include "main/wifi_configuration.h"
 
 #include "cmsis-dap/include/cmsis_compiler.h"
 #include "cmsis-dap/include/gpio_op.h"
