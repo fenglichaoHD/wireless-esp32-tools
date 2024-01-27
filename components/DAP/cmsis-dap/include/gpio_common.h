@@ -13,12 +13,15 @@
 
 #elif defined CONFIG_IDF_TARGET_ESP32
     #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 3, 0)
-        #include "soc/esp32/include/soc/gpio_struct.h"
-        #include "soc/esp32/include/soc/dport_access.h"
-        #include "soc/esp32/include/soc/dport_reg.h"
-        #include "soc/esp32/include/soc/periph_defs.h"
-        #include "soc/esp32/include/soc/spi_struct.h"
-        #include "soc/esp32/include/soc/spi_reg.h"
+		#include "soc/io_mux_reg.h"
+		#include "soc/gpio_struct.h"
+		#include "soc/dport_access.h"
+		#include "soc/dport_reg.h"
+		#include "soc/periph_defs.h"
+		#include "soc/spi_struct.h"
+		#include "soc/spi_reg.h"
+		#include "soc/gpio_periph.h"
+		#include "hal/gpio_ll.h"
     #else
         #include "soc/soc/esp32/include/soc/gpio_struct.h"
         #include "soc/soc/esp32/include/soc/dport_access.h"

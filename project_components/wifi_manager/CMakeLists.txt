@@ -1,4 +1,8 @@
-file(GLOB SOURCES *.c)
+file(GLOB SOURCES
+        wifi_event_handler.c
+        wifi_manager.c
+        )
+
 
 idf_component_register(
         SRCS ${SOURCES}

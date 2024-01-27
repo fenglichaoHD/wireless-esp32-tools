@@ -9,11 +9,11 @@
  */
 #include <stdint.h>
 
-#include "main/wifi_configuration.h"
 #include "usbip_server.h"
 #include "DAP_handle.h"
 
 #include "components/elaphureLink/elaphureLink_protocol.h"
+#include "proxy_server_conf.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -49,7 +49,7 @@ void tcp_server_task(void *pvParameters)
         struct sockaddr_in6 destAddr;
         bzero(&destAddr.sin6_addr.un, sizeof(destAddr.sin6_addr.un));
         destAddr.sin6_family = AF_INET6;
-        destAddr.sin6_port = htons(PORT);
+        destAddr.sin6_port = htons(DAP_PROXY_PORT);
         addr_family = AF_INET6;
         ip_protocol = IPPROTO_IPV6;
         inet6_ntoa_r(destAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
