@@ -9,6 +9,7 @@
 #include "wt_mdns_config.h"
 #include "wt_storage.h"
 #include "wifi_manager.h"
+#include "web_server.h"
 
 void app_main()
 {
@@ -18,6 +19,7 @@ void app_main()
 
 	wifi_manager_init();
     DAP_Setup();
+	start_webserver();
 
 	wt_mdns_init();
 

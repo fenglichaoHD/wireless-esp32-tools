@@ -83,3 +83,27 @@ void wifi_manager_init(void)
 	ESP_ERROR_CHECK(esp_wifi_start());
 	ESP_LOGI(TAG, "wifi started");
 }
+
+void *wifi_manager_get_ap_netif()
+{
+	return ap_netif;
+}
+
+void *wifi_manager_get_sta_netif()
+{
+	return sta_netif;
+}
+
+
+void test()
+{
+//	esp_netif_get_ip_info()
+	wifi_sta_list_t list;
+	wifi_ap_config_t ap_conf;
+	wifi_ap_record_t ap_info;
+
+	/* ESP_ERR_WIFI_NOT_CONNECT / ESP_ERR_WIFI_CONN */
+	esp_wifi_sta_get_ap_info(&ap_info);
+
+//	esp_wifi_ap_get_sta_list()
+}
