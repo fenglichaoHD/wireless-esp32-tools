@@ -5,3 +5,6 @@ tmp/
 sdkconfig.old
 .idea/
 dependencies.lock
+**/priv_note.md
+_priv_tools/
+project_components/wifi_manager/wifi_configuration.h

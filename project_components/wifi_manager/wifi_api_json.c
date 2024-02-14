@@ -21,7 +21,6 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_resp_t *rsp)
 		break;
 	case WIFI_API_JSON_GET_SCAN:
 		return wifi_api_json_get_scan(req, rsp);
-		break;
 	case UNKNOWN:
 	default:
 		break;
@@ -42,7 +41,17 @@ static int wifi_api_json_get_ap_info(api_json_req_t *req, api_json_resp_t *resp)
 
 static int wifi_api_json_get_scan(api_json_req_t *req, api_json_resp_t *resp)
 {
+	wifi_api_ap_info_t ap_info[20];
+	uint16_t max_count = 20;
+	int err;
 
+	err = wifi_api_get_scan_list(&max_count, ap_info);
+	if (err == ESP_ERR_NOT_FINISHED) {
+		resp->json = wifi_api_json_create_err_rsp(req->json, "Wi-Fi scan busy");
+		return 1;
+	}
+
+	resp->json = wifi_api_json_serialize_scan_list(ap_info, max_count);
 	return 0;
 }
 

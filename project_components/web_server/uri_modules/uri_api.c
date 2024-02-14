@@ -27,6 +27,7 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 	ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
 	ESP_LOGI(TAG, "%.*s", data_len, buf);
 	ESP_LOGI(TAG, "====================================");
+	ESP_LOGI(TAG, "heap min: %lu, cur: %lu", esp_get_minimum_free_heap_size(), esp_get_free_heap_size());
 
 	/* Decode */
 	json_in.json = cJSON_ParseWithLength(buf, data_len);
@@ -35,10 +36,6 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 		httpd_resp_send(req, NULL, 0);
 		return ESP_OK;
 	}
-
-	/* DEBUG print the actual decoded string */
-	cJSON_PrintPreallocated(json_in.json, buf, sizeof(buf), 0);
-	printf("json: %s\n", buf);
 
 	err = api_json_route(&json_in, &json_out);
 	if (err) {
@@ -63,7 +60,11 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 		return httpd_resp_send(req, NULL, 0);
 	}
 
-	return httpd_resp_send(req, buf, strlen(buf));
+	err = httpd_resp_send(req, buf, strlen(buf));
+	if (err) {
+		ESP_LOGE(TAG, "resp_send err: %s", esp_err_to_name(err));
+	}
+	return err;
 }
 
 /**

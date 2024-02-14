@@ -4,10 +4,6 @@
 
 ![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
 
-[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=master)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Amaster) master　
-[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=develop)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Adevelop) develop
-
-[![](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/LICENSE)　[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/pulls)　[![%e2%9d%a4](https://img.shields.io/badge/made%20with-%e2%9d%a4-ff69b4.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap)
 
 ## 简介
 
@@ -24,7 +20,6 @@
 ## 特性
 
 1. 支持的ESP芯片
-    - [x] ESP8266/8285
     - [x] ESP32
     - [x] ESP32C3
 
@@ -57,49 +52,11 @@
 
 固件中已经内置了一个mDNS服务。你可以通过`dap.local`的地址访问到设备。
 
-> ESP8266的mDNS只支持ipv4。
 
 ![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
 
 
 ### 调试接口连接
-
-<details>
-<summary>ESP8266</summary>
-
-| SWD            |        |
-|----------------|--------|
-| SWCLK          | GPIO14 |
-| SWDIO          | GPIO13 |
-| TVCC           | 3V3    |
-| GND            | GND    |
-
-
---------------
-
-
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO14  |
-| TMS                | GPIO13  |
-| TDI                | GPIO4   |
-| TDO                | GPIO16  |
-| nTRST \(optional\) | GPIO0\* |
-| nRESET             | GPIO5   |
-| TVCC               | 3V3     |
-| GND                | GND     |
-
---------------
-
-| Other              |               |
-|--------------------|---------------|
-| LED\_WIFI\_STATUS  | GPIO15        |
-| Tx                 | GPIO2         |
-| Rx                 | GPIO3 (U0RXD) |
-
-> Rx和Tx用于TCP转发的串口，默认不开启该功能。
-
-</details>
 
 
 <details>
@@ -183,21 +140,6 @@
 
 
 ----
-
-## 硬件参考电路
-
-目前这里仅有ESP8266的参考电路。
-
-
-我们为你提供了一个简单的硬件电路例子作为参考：
-
-![sch](https://user-images.githubusercontent.com/17078589/120953707-2a0a6e00-c780-11eb-9ad8-7221cf847974.png)
-
-***除此之外，你也可以像我们一开始给出的那张图片直接用杜邦线连接开发板，这就不需要额外的电路。***
-
-此外，你还可以从贡献者那里获得一个完整的硬件参考电路，详见 [circuit](circuit)文件夹。
-
-------
 
 ## 编译固件并烧写
 
@@ -423,7 +365,7 @@ esptool.py -p (PORT) flash_id
 > - https://github.com/ARM-software/CMSIS_5 for CMSIS
 > - https://github.com/cezanne/usbip-win for usbip windows
 
-
+- [@windowsair](https://github.com/windowsair/wireless-esp8266-dap)
 - [@HeavenSpree](https://www.github.com/HeavenSpree)
 - [@Zy19930907](https://www.github.com/Zy19930907)
 - [@caiguang1997](https://www.github.com/caiguang1997)
@@ -431,4 +373,4 @@ esptool.py -p (PORT) flash_id
 
 
 ## 许可证
-[MIT 许可证](LICENSE)
+[Apache 2.0 许可证](LICENSE)

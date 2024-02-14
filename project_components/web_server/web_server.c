@@ -9,9 +9,8 @@
 #include <sys/unistd.h>
 
 #define TAG "web server"
-#define EXAMPLE_HTTP_QUERY_KEY_MAX_LEN  (64)
-#define MAKE_U32(b0, b1, b2, b3) ((b0) | (b1) << 8 | (b2) << 16 | (b3)  << 24)
 
+#define MAKE_U32(b0, b1, b2, b3) ((b0) | (b1) << 8 | (b2) << 16 | (b3)  << 24)
 #define URI_WS_STR MAKE_U32('/', 'w', 's', '\0')
 #define URI_API_STR MAKE_U32('/', 'a', 'p', 'i')
 
@@ -101,29 +100,20 @@ void start_webserver(void)
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 	int err;
 
+	config.enable_so_linger = true;
+	config.linger_timeout = 0;
 	config.lru_purge_enable = true;
 	config.uri_match_fn = uri_match;
 	config.open_fn = web_server_on_open;
 	config.close_fn = web_server_on_close;
 
-		// Start the httpd server
 	ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
-
 	if ((err = httpd_start(&server, &config) != ESP_OK)) {
 		ESP_LOGE(TAG, "Error starting server!");
 		ESP_ERROR_CHECK(err);
 	}
 
-	// Set URI handlers
 	ESP_LOGI(TAG, "Registering URI handlers");
-
-	/*
-	 * load http service
-	 * TODO: make ws a module
-	 * make http api POST a module
-	 * make update a module
-	 * */
-
 	uri_module_init(server);
 	http_server = server;
 }

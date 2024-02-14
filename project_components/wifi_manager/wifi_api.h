@@ -14,5 +14,11 @@ typedef struct wifi_api_ap_info_t {
 
 void wifi_api_get_ap_info(wifi_api_ap_info_t *ap_info);
 
+typedef void (*wifi_api_scan_done_cb)(uint16_t found, wifi_api_ap_info_t *aps, void *arg);
+
+int wifi_api_trigger_scan(uint16_t *max_ap_count, wifi_api_scan_done_cb cb, void *cb_arg);
+
+int wifi_api_get_scan_list(uint16_t *number, wifi_api_ap_info_t *ap_info);
+
 
 #endif //WIFI_API_H_GUARD

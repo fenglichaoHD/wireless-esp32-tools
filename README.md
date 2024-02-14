@@ -2,12 +2,6 @@
 
 ![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
 
-
-[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=master)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Amaster) master　
-[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=develop)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Adevelop) develop
-
-[![](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/LICENSE)　[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/pulls)　[![%e2%9d%a4](https://img.shields.io/badge/made%20with-%e2%9d%a4-ff69b4.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap)
-
 [中文](README_CN.md)
 
 ## Introduce
@@ -27,7 +21,6 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 ## Feature
 
 1. SoC Compatibility
-    - [x] ESP8266/8285
     - [x] ESP32
     - [x] ESP32C3
 
@@ -55,61 +48,18 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 
 The default connected WIFI SSID is `DAP` or `OTA` , password `12345678`
 
-Support for specifying multiple possible WAP. It can be added here: [wifi_configuration.h](main/wifi_configuration.h)
+Support for specifying multiple possible WAP. It can be added here: [wifi_configuration.h](project_components/wifi_manager/wifi_configuration.h)
 
 You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
 
 ![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
-
 There is built-in ipv4 only mDNS server. You can access the device using `dap.local`.
-
-> The mDNS in ESP8266 only supports ipv4.
 
 ![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
 
 
-
 ### Debugger
-
-
-<details>
-<summary>ESP8266</summary>
-
-| SWD            |        |
-|----------------|--------|
-| SWCLK          | GPIO14 |
-| SWDIO          | GPIO13 |
-| TVCC           | 3V3    |
-| GND            | GND    |
-
-
---------------
-
-
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO14  |
-| TMS                | GPIO13  |
-| TDI                | GPIO4   |
-| TDO                | GPIO16  |
-| nTRST \(optional\) | GPIO0\* |
-| nRESET             | GPIO5   |
-| TVCC               | 3V3     |
-| GND                | GND     |
-
---------------
-
-| Other              |               |
-|--------------------|---------------|
-| LED\_WIFI\_STATUS  | GPIO15        |
-| Tx                 | GPIO2         |
-| Rx                 | GPIO3 (U0RXD) |
-
-> Rx and Tx is used for uart bridge, not enabled by default.
-
-</details>
-
 
 <details>
 <summary>ESP32</summary>
@@ -185,30 +135,10 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 | Rx                 | GPIO18        |
 
 
-> Rx and Tx is used for uart bridge, not enabled by default.
-
-
 </details>
 
 
 ----
-
-## Hardware Reference
-
-Only a hardware reference for the ESP8266 is currently available.
-
-
-Here we provide a simple example for reference:
-
-![sch](https://user-images.githubusercontent.com/17078589/150284806-e6dff0fa-4fe1-4d86-ac45-3b657fbea6b7.png)
-
-
-***Alternatively, you can connect directly with wires as we gave at the beginning, without additional circuits.***
-
-
-In addition, a complete hardware reference design is available from contributors, see [circuit](circuit)
-
-------
 
 
 ## Build And Flash
@@ -221,30 +151,6 @@ See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-d
 
 
 ### General build and Flash
-
-<details>
-<summary>ESP8266</summary>
-
-1. Get ESP8266 RTOS Software Development Kit
-
-    The SDK is already included in the project. Please don't use other versions of the SDK.
-
-2. Build & Flash
-
-    Build with ESP-IDF build system.
-    More information can be found at the following link: [Build System](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html "Build System")
-
-The following example shows a possible way to build on Windows:
-
-```bash
-# Build
-python ./idf.py build
-# Flash
-python ./idf.py -p /dev/ttyS5 flash
-```
-
-</details>
-
 
 <details>
 <summary>ESP32/ESP32C3</summary>
@@ -269,13 +175,7 @@ idf.py build
 idf.py -p /dev/ttyS5 flash
 ```
 
-> The `idf.py` in the project root directory is only applicable to the old ESP8266 target. Don't use it in ESP32.
-
 </details>
-
-
-> We also provided sample firmware for quick evaluation. See [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
-
 
 ## Usage
 
@@ -330,7 +230,6 @@ Some LAN broadcast packets can cause serious impact, including:
 - Logitech Arx Control
 - ...
 
-For ESP8266, this is not far from UDP FLOOD...😰
 
 It is also affected by the surrounding radio environment, your AP situation (some NICs have terrible AP performance), distance, etc.
 
@@ -481,7 +380,7 @@ Credits to the following project, people and organizations:
 > - https://github.com/ARM-software/CMSIS_5 for CMSIS
 > - https://github.com/cezanne/usbip-win for usbip windows
 
-
+- [@windowsair](https://www.github.com/windowsair/wireless-esp8266-dap)
 - [@HeavenSpree](https://www.github.com/HeavenSpree)
 - [@Zy19930907](https://www.github.com/Zy19930907)
 - [@caiguang1997](https://www.github.com/caiguang1997)
@@ -490,5 +389,5 @@ Credits to the following project, people and organizations:
 
 ## License
 
-[MIT LICENSE](LICENSE)
+[Apache2.0 LICENSE](LICENSE)
 
