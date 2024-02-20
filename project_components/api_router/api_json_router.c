@@ -10,22 +10,22 @@ int api_json_router_init()
 	return 0;
 }
 
-int api_json_route(api_json_req_t *req, api_json_resp_t *rsp)
+int api_json_route(api_json_req_t *req, api_json_module_async_t *rsp)
 {
 	uint16_t cmd;
 	uint8_t module_id;
 	cJSON *cmd_json;
 	cJSON *module_json;
 
-	if (unlikely(req->json == NULL)) {
-		return 1;
+	if (unlikely(req == NULL)) {
+		return API_JSON_BAD_REQUEST;
 	}
 
-	cmd_json = cJSON_GetObjectItem(req->json, "cmd");
-	module_json = cJSON_GetObjectItem(req->json, "module");
+	cmd_json = cJSON_GetObjectItem(req->in, "cmd");
+	module_json = cJSON_GetObjectItem(req->in, "module");
 
 	if (!cJSON_IsNumber(cmd_json) || !cJSON_IsNumber(module_json)) {
-		return 1;
+		return API_JSON_BAD_REQUEST;
 	}
 
 	cmd = cmd_json->valueint;

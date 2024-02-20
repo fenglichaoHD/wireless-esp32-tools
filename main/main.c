@@ -10,9 +10,13 @@
 #include "wt_storage.h"
 #include "wifi_manager.h"
 #include "web_server.h"
+#include "static_buffer.h"
+#include "request_runner.h"
 
 void app_main()
 {
+	assert(static_buffer_init() == 0);
+	assert(request_runner_init() == 0);
 	wt_storage_init();
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	ESP_ERROR_CHECK(esp_netif_init());

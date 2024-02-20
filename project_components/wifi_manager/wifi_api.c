@@ -20,8 +20,8 @@ void wifi_api_get_ap_info(wifi_api_ap_info_t *ap_info)
 
 static int rssi_comp(const void *a, const void *b)
 {
-	const wifi_ap_record_t *r1 = a;
-	const wifi_ap_record_t *r2 = b;
+	const wifi_api_ap_info_t *r1 = a;
+	const wifi_api_ap_info_t *r2 = b;
 	return r2->rssi - r1->rssi;
 }
 

@@ -33,6 +33,7 @@ int api_json_module_add(api_json_init_func func)
 	err = func(&api_module);
 	if (err) {
 		printf("module %p init failed\n", func);
+		return 1;
 	}
 
 	if (api_module.module_id >= API_MODULE_MAX) {
@@ -51,10 +52,10 @@ int api_json_module_add(api_json_init_func func)
 	return 0;
 }
 
-int api_json_module_call(uint8_t id, uint16_t cmd, api_json_req_t *in, api_json_resp_t *out)
+int api_json_module_call(uint8_t id, uint16_t cmd, api_json_req_t *in, api_json_module_async_t *out)
 {
 	if (unlikely(id >= API_MODULE_MAX || module_arr[id].on_req == NULL)) {
-		return 1;
+		return API_JSON_BAD_REQUEST;
 	}
 
 	return module_arr[id].on_req(cmd, in, out);

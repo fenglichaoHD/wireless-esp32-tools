@@ -5,6 +5,6 @@
 
 int api_json_router_init();
 
-int api_json_route(api_json_req_t *req, api_json_resp_t *out);
+int api_json_route(api_json_req_t *req, api_json_module_async_t *out);
 
 #endif //API_JSON_ROUTER_H_GUARD
