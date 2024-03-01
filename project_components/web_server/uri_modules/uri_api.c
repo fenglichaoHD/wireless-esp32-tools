@@ -19,7 +19,7 @@ typedef struct post_request_t {
 	char buf[0];
 } post_request_t;
 
-static void async_send_out_cb(void *req, int module_status);
+static void async_send_out_cb(void *arg, int module_status);
 static int uri_api_send_out(httpd_req_t *req, post_request_t *post_req);
 
 
@@ -66,12 +66,12 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 
 	post_req->json.out = NULL;
 	err = api_json_route(&post_req->json, &post_req->async);
-	cJSON_Delete(post_req->json.in);
 	if (err == API_JSON_ASYNC) {
 		httpd_req_async_handler_begin(req, &post_req->req_out);
 		post_req->async.req_task.send_out.cb = async_send_out_cb;
 		post_req->async.req_task.send_out.arg = post_req;
 		if (req_queue_push_long_run(&post_req->async.req_task, pdMS_TO_TICKS(20))) {
+			/* queued failed */
 			httpd_req_async_handler_complete(post_req->req_out);
 			httpd_resp_set_status(req, HTTPD_STATUS_503);
 			goto end;
@@ -91,6 +91,7 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 	goto put_buf;
 
 end:
+	cJSON_Delete(post_req->json.in);
 	err = httpd_resp_send(req, NULL, 0);
 	if (unlikely(err)) {
 		ESP_LOGE(TAG, "resp_send err: %s", esp_err_to_name(err));
@@ -112,6 +113,7 @@ int uri_api_send_out(httpd_req_t *req, post_request_t *post_req)
 	httpd_resp_set_type(req, HTTPD_TYPE_JSON);
 	err = !cJSON_PrintPreallocated(post_req->json.out, buf, buf_len - 5, 0);
 	cJSON_Delete(post_req->json.out);
+	cJSON_Delete(post_req->json.in);
 	if (unlikely(err)) {
 		httpd_resp_set_status(req, HTTPD_500);
 		return httpd_resp_send(req, NULL, 0);
@@ -146,13 +148,13 @@ static const httpd_uri_t uri_api = {
 	.user_ctx  = NULL
 };
 
-int URI_API_INIT(const httpd_uri_t **uri_conf) {
+static int URI_API_INIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &uri_api;
 	api_json_router_init();
 	return 0;
 }
 
-int URI_API_EXIT(const httpd_uri_t **uri_conf) {
+static int URI_API_EXIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &uri_api;
 	return 0;
 }

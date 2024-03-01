@@ -1,17 +1,16 @@
-#include <sys/queue.h>
-#include <sys/cdefs.h>
-#include <sys/queue.h>
-#include <sys/cdefs.h>
 /*
  * SPDX-FileCopyrightText: 2024 kerms
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 #include "request_runner.h"
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/queue.h>
+
+#include <sys/cdefs.h>
 
 static QueueHandle_t long_run_queue = NULL;
 static QueueHandle_t send_out_queue = NULL;

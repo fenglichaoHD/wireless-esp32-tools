@@ -83,12 +83,12 @@ static const httpd_uri_t hello = {
 	.user_ctx  = "Hello World!"
 };
 
-int URI_HTML_BASE_INIT(const httpd_uri_t **uri_conf) {
+static int URI_HTML_BASE_INIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &hello;
 	return 0;
 }
 
-int URI_HTML_BASE_EXIT(const httpd_uri_t **uri_conf) {
+static int URI_HTML_BASE_EXIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &hello;
 	return 0;
 }

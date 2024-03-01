@@ -13,13 +13,15 @@
 #include "static_buffer.h"
 #include "request_runner.h"
 
+#include <assert.h>
+
 void app_main()
 {
 	assert(static_buffer_init() == 0);
 	assert(request_runner_init() == 0);
 	wt_storage_init();
-	ESP_ERROR_CHECK(esp_event_loop_create_default());
 	ESP_ERROR_CHECK(esp_netif_init());
+	ESP_ERROR_CHECK(esp_event_loop_create_default());
 
 	wifi_manager_init();
     DAP_Setup();

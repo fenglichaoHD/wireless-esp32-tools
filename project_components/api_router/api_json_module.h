@@ -5,7 +5,6 @@
 #include <cJSON.h>
 #include <stdint.h>
 
-
 typedef struct api_json_req_t {
 	cJSON *in;
 	cJSON *out;
@@ -20,11 +19,6 @@ typedef struct api_json_module_async_t {
 	api_json_module_req_t module;
 	req_task_cb_t req_task;
 } api_json_module_async_t;
-
-//typedef struct api_json_send_out_t {
-//	void (*func)(void *arg);
-//	void *arg; /* socket context */
-//} api_json_send_out_t;
 
 
 typedef enum api_json_req_status_e {

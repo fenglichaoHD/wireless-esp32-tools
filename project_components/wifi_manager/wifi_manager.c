@@ -12,6 +12,7 @@
 
 #include <lwip/ip4_addr.h>
 #include <string.h>
+#include <assert.h>
 
 #define TAG __FILENAME__
 
@@ -123,7 +124,7 @@ static void scan_loop()
 		                            wifi_event_scan_channel_done, number,
 		                            &scan_ctx.ap[scan_ctx.total_aps])) {
 			ESP_LOGE(TAG, "trigger scan %d error", scan_channel);
-			goto end;
+			return;
 		}
 		/* shadow wifi_event_scan_channel_done() called */
 		vTaskDelay(100);
@@ -132,13 +133,8 @@ static void scan_loop()
 		if (ret == 0) {
 			/* timeout */
 			ESP_LOGE(TAG, "scan channel %d timeout", scan_channel);
-			goto end;
+			return;
 		}
-	}
-
-end:
-	if (scan_ctx.cb) {
-//	scan_ctx.cb(scan_ctx.total_aps, scan_ctx.ap);
 	}
 }
 
@@ -146,6 +142,10 @@ static void wifi_manager_scan_task(void *arg)
 {
 	scan_loop();
 	free(scan_ctx.ap);
+	/* callback */
+	if (scan_ctx.cb) {
+		scan_ctx.cb(scan_ctx.total_aps, scan_ctx.ap, arg);
+	}
 	xSemaphoreGive(scan_ctx.lock);
 	vTaskDelete(NULL);
 }
@@ -167,7 +167,7 @@ int wifi_manager_trigger_scan(wifi_manager_scan_done_cb cb, void *arg)
 
 	ulTaskNotifyTake(pdTRUE, 0);
 	xTaskCreatePinnedToCore(wifi_manager_scan_task, "scan task", 4 * 1024,
-							NULL, 7, &scan_ctx.task, 0);
+							arg, 7, &scan_ctx.task, 0);
 	return 0;
 }
 

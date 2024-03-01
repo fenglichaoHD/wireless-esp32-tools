@@ -76,10 +76,13 @@ static void wifi_manager_scan_done(uint16_t ap_found, wifi_ap_record_t *records,
 	scan_done_cb(ap_found, ap_info, arg);
 }
 
-
 int wifi_api_trigger_scan(uint16_t *max_ap_count, wifi_api_scan_done_cb cb, void *cb_arg)
 {
-	wifi_manager_trigger_scan(wifi_manager_scan_done, cb_arg);
+	int err;
+	err = wifi_manager_trigger_scan(wifi_manager_scan_done, cb_arg);
+	if (err) {
+		return err;
+	}
 	scan_done_cb = cb;
 	return 0;
 }

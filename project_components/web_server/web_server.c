@@ -96,7 +96,6 @@ static void web_server_on_close(httpd_handle_t hd, int sockfd)
 
 void start_webserver(void)
 {
-	httpd_handle_t server = NULL;
 	httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 	int err;
 
@@ -108,14 +107,13 @@ void start_webserver(void)
 	config.close_fn = web_server_on_close;
 
 	ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
-	if ((err = httpd_start(&server, &config) != ESP_OK)) {
+	if ((err = httpd_start(&http_server, &config)) != ESP_OK) {
 		ESP_LOGE(TAG, "Error starting server!");
 		ESP_ERROR_CHECK(err);
 	}
 
 	ESP_LOGI(TAG, "Registering URI handlers");
-	uri_module_init(server);
-	http_server = server;
+	uri_module_init(http_server);
 }
 
 static esp_err_t stop_webserver(httpd_handle_t server)

@@ -1,49 +1,52 @@
 #include "web_uri_module.h"
+#include "list.h"
 
 #include <esp_log.h>
+
 
 #define URI_MODULE_MAX 8
 
 #define TAG __FILE_NAME__
 
-static uri_module_t module_arr[URI_MODULE_MAX];
+typedef struct uri_module_list_t {
+	struct dl_list list;
+	uri_module_t module;
+} uri_module_list_t;
+
+static uri_module_list_t module_arr[URI_MODULE_MAX];
 static uint8_t module_count = 0;
+static DEFINE_DL_LIST(list_head);
 
 int uri_module_init(httpd_handle_t server)
 {
 	int err;
 	const httpd_uri_t *uri;
+	uri_module_list_t *item;
+	uint8_t index = 0;
 
-	for (int i = 0; i < module_count; ++i) {
-		err = module_arr[i].init(&uri);
+	dl_list_for_each(item, &list_head, uri_module_list_t, list) {
+		err = item->module.init(&uri);
 		ESP_LOGI(TAG, "uri %s init", uri->uri);
 		if (err) {
-			ESP_LOGE(TAG, "%d init error", i);
+			ESP_LOGE(TAG, "%d init error", index);
 		}
 
 		err = httpd_register_uri_handler(server, uri);
 		if (err) {
-			ESP_LOGE(TAG, "%d %s", i, esp_err_to_name(err));
+			ESP_LOGE(TAG, "%d %s", index, esp_err_to_name(err));
 		}
+		index++;
 	}
 	return 0;
 }
 
 int uri_module_exit(httpd_handle_t server)
 {
-	int err;
-	const httpd_uri_t *uri;
-	for (int i = 0; i < module_count; ++i) {
-		module_arr[i].exit(&uri);
-		err = httpd_unregister_uri_handler(server, uri->uri, uri->method);
-		if (err) {
-			ESP_LOGE(TAG, "%d %s", i, esp_err_to_name(err));
-		}
-	}
+
 	return 0;
 }
 
-int uri_module_add(uri_module_func init, uri_module_func exit)
+int uri_module_add(uint8_t priority, uri_module_func init, uri_module_func exit)
 {
 	ESP_LOGE(TAG, "adding module %p", init);
 
@@ -52,8 +55,17 @@ int uri_module_add(uri_module_func init, uri_module_func exit)
 		return 1;
 	}
 
-	module_arr[module_count].exit = exit;
-	module_arr[module_count].init = init;
+	module_arr[module_count].module.exit = exit;
+	module_arr[module_count].module.init = init;
+	module_arr[module_count].module.priority = priority;
+
+	uri_module_list_t *item;
+	dl_list_for_each(item, &list_head, uri_module_list_t, list) {
+		if (item->module.priority <= priority) {
+			break;
+		}
+	}
+	dl_list_add(&item->list, &module_arr[module_count].list);
 	module_count++;
 	return 0;
 }
