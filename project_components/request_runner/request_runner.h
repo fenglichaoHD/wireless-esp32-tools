@@ -22,6 +22,7 @@ typedef struct req_module_cb_t {
 typedef struct req_task_cb_t {
 	req_module_cb_t module;
 	req_send_out_cb_t send_out;
+	int status;
 } req_task_cb_t;
 
 int request_runner_init();

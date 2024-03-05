@@ -44,42 +44,52 @@ void ip_event_handler(void *handler_arg __attribute__((unused)),
 	}
 }
 
-typedef struct wifi_scan_ctx_t {
-	wifi_ap_record_t *ap;
-	wifi_event_scan_done_cb cb;
-	uint16_t number;
-} wifi_scan_ctx_t;
+typedef struct wifi_event_ctx_t {
+	/* WIFI scan */
+	struct {
+		wifi_ap_record_t *ap;
+		wifi_event_scan_done_cb cb;
+		uint16_t number;
+	};
+	/* WIFI connect */
+	struct {
+		wifi_event_connect_done_cb cb;
+		void *arg;
+		void (*disconn_handler)(void);
+		uint8_t attempt;
+	} conn;
+	uint8_t is_connected;
+} wifi_event_ctx_t;
 
-static wifi_scan_ctx_t scan_ctx = {
+static wifi_event_ctx_t event_ctx = {
 	.ap = NULL,
+	.is_connected = 0,
+	.conn.disconn_handler = NULL,
 };
 
 static void wifi_on_scan_done(wifi_event_sta_scan_done_t *event)
 {
-	int err;
-	if (!scan_ctx.cb || !scan_ctx.ap) {
-		scan_ctx.number = 0;
+	if (!event_ctx.cb || !event_ctx.ap) {
+		event_ctx.number = 0;
 	} else if (event->status == 1) {
 		/* error */
-		scan_ctx.number = 0;
+		event_ctx.number = 0;
 	} else if (event->number == 0) {
 		/* no ap found on current channel */
-		scan_ctx.number = 0;
+		event_ctx.number = 0;
 	}
 
-	err = esp_wifi_scan_get_ap_records(&scan_ctx.number, scan_ctx.ap);
-	if (err) {
-		esp_wifi_clear_ap_list();
-	}
+	esp_wifi_scan_get_ap_records(&event_ctx.number, event_ctx.ap);
+	esp_wifi_clear_ap_list();
 
 	int i;
-	for (i = 0; i < scan_ctx.number; ++i) {
-		if (scan_ctx.ap[i].rssi < -80)
+	for (i = 0; i < event_ctx.number; ++i) {
+		if (event_ctx.ap[i].rssi < -80)
 			break;
 	}
 
-	scan_ctx.number = i;
-	return scan_ctx.cb(scan_ctx.number, scan_ctx.ap);
+	event_ctx.number = i;
+	return event_ctx.cb(event_ctx.number, event_ctx.ap);
 }
 
 
@@ -108,11 +118,19 @@ int wifi_event_trigger_scan(uint8_t channel, wifi_event_scan_done_cb cb, uint16_
 		return err;
 	}
 
-	scan_ctx.cb = cb;
-	scan_ctx.number = number;
-	scan_ctx.ap = aps;
+	event_ctx.cb = cb;
+	event_ctx.number = number;
+	event_ctx.ap = aps;
 	return 0;
 }
+
+/*
+ * WIFI EVENT
+ * */
+
+static void reconnect_after_disco();
+
+void event_on_connected(wifi_event_sta_connected_t *event);
 
 void wifi_event_handler(void *handler_arg __attribute__((unused)),
                         esp_event_base_t event_base __attribute__((unused)),
@@ -128,13 +146,12 @@ void wifi_event_handler(void *handler_arg __attribute__((unused)),
 //		printf("event: WIFI_EVENT_SCAN_DONE: ok: %lu, nr: %u, seq: %u\n",
 //		       event->status, event->number, event->scan_id);
 		wifi_on_scan_done(event);
-		scan_ctx.ap = NULL;
-		scan_ctx.cb = NULL;
+		event_ctx.ap = NULL;
+		event_ctx.cb = NULL;
 		break;
 	}
 	case WIFI_EVENT_STA_START:
 		printf("event: WIFI_EVENT_STA_START\n");
-		esp_wifi_connect();
 		break;
 	case WIFI_EVENT_STA_CONNECTED: {
 		wifi_event_sta_connected_t *event = event_data;
@@ -145,6 +162,8 @@ void wifi_event_handler(void *handler_arg __attribute__((unused)),
 #ifdef CONFIG_EXAMPLE_IPV6
 		tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
 #endif
+		event_ctx.is_connected = 1;
+		event_on_connected(event);
 		break;
 	}
 	case WIFI_EVENT_STA_DISCONNECTED: {
@@ -153,8 +172,8 @@ void wifi_event_handler(void *handler_arg __attribute__((unused)),
 		printf("event: WIFI_EVENT_STA_DISCONNECTED ");
 		printf("sta %02X:%02X:%02X:%02X:%02X:%02X disconnect reason %d\n",
 		       m[0], m[1], m[2], m[3], m[4], m[5], event->reason);
-		/* auto reconnect after disconnection */
-		esp_wifi_connect();
+		event_ctx.is_connected = 0;
+		reconnect_after_disco();
 		break;
 	}
 	case WIFI_EVENT_AP_START:
@@ -181,3 +200,65 @@ void wifi_event_handler(void *handler_arg __attribute__((unused)),
 	}
 }
 
+void wifi_event_set_disco_handler(void (*disconn_handler)(void))
+{
+	event_ctx.conn.disconn_handler = disconn_handler;
+}
+
+int wifi_event_trigger_connect(uint8_t attempt, wifi_event_connect_done_cb cb, void *arg)
+{
+	int err;
+	event_ctx.conn.attempt = attempt;
+	event_ctx.conn.cb = cb;
+	event_ctx.conn.arg = arg;
+	if (event_ctx.is_connected) {
+		err = esp_wifi_disconnect();
+	} else {
+		err = esp_wifi_connect();
+	}
+	return err;
+}
+
+void event_on_connected(wifi_event_sta_connected_t *event)
+{
+	if (event_ctx.conn.cb) {
+		event_ctx.conn.cb(event_ctx.conn.arg, event);
+	}
+	event_ctx.conn.attempt = 0;
+	event_ctx.conn.cb = NULL;
+	event_ctx.conn.arg = NULL;
+}
+
+void reconnect_after_disco()
+{
+	int err;
+
+	ESP_LOGI(TAG, "reco... atempt %d", event_ctx.conn.attempt);
+
+	if (event_ctx.conn.attempt == 0) {
+		goto call;
+	}
+
+	err = esp_wifi_connect();
+	if (err) {
+		event_ctx.conn.attempt = 0;
+		/* connect err: stop connect and call cb */
+		ESP_LOGE(TAG, "wifi connect error %s", esp_err_to_name(err));
+		goto call;
+	}
+
+	event_ctx.conn.attempt--;
+	return;
+
+call:
+	if (event_ctx.conn.cb) {
+		event_ctx.conn.cb(event_ctx.conn.arg, NULL);
+	} else {
+		/* disconnected from extern environment, notify */
+		if (event_ctx.conn.disconn_handler) {
+			event_ctx.conn.disconn_handler();
+		}
+	}
+	event_ctx.conn.cb = NULL;
+	event_ctx.conn.arg = NULL;
+}

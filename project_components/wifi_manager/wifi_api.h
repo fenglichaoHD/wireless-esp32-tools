@@ -20,5 +20,9 @@ int wifi_api_trigger_scan(uint16_t *max_ap_count, wifi_api_scan_done_cb cb, void
 
 int wifi_api_get_scan_list(uint16_t *number, wifi_api_ap_info_t *ap_info);
 
+int wifi_api_connect(const char *ssid, const char *password);
+
+int wifi_api_disconnect(void);
+
 
 #endif //WIFI_API_H_GUARD

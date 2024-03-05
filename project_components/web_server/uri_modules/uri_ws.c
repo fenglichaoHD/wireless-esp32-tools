@@ -136,13 +136,11 @@ static const httpd_uri_t uri_api = {
 	.user_ctx  = NULL,
 	.is_websocket = true,
 	.supported_subprotocol = NULL,
-	/* in esp-idf v5.2.0, set to false cause infinite queue_work fail on wifi disconnect when at least 1 ws client */
 	.handle_ws_control_frames = true,
 };
 
 static int WS_REQ_INIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &uri_api;
-	api_json_router_init();
 	return 0;
 }
 

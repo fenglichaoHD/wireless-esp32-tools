@@ -26,13 +26,13 @@ _Noreturn void req_long_task(void *arg)
 		if (unlikely(xQueueReceive(long_run_queue, &req, portMAX_DELAY) != pdTRUE)) {
 			continue;
 		}
-		int status = req->module.helper_cb(req->module.arg);
+		req->status = req->module.helper_cb(req->module.arg);
 
 		/* if send out queue is busy, set status and let the cb to cancel send out
 		 * */
 		if (req_queue_push_send_out(req, pdMS_TO_TICKS(20)) != 0) {
-			status = -1;
-			req->send_out.cb(req->send_out.arg, status);
+			req->status = -1;
+			req->send_out.cb(req->send_out.arg, req->status);
 		}
 	}
 }
@@ -42,7 +42,7 @@ _Noreturn void req_send_out_task(void *arg)
 	req_task_cb_t *req;
 	while (1) {
 		if (likely(xQueueReceive(send_out_queue, &req, portMAX_DELAY))) {
-			req->send_out.cb(req->send_out.arg, 0);
+			req->send_out.cb(req->send_out.arg, req->status);
 		}
 	}
 }

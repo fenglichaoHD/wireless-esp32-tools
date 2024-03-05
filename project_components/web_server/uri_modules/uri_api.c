@@ -20,7 +20,7 @@ typedef struct post_request_t {
 } post_request_t;
 
 static void async_send_out_cb(void *arg, int module_status);
-static int uri_api_send_out(httpd_req_t *req, post_request_t *post_req);
+static int uri_api_send_out(httpd_req_t *req, post_request_t *post_req, int err);
 
 
 static esp_err_t api_post_handler(httpd_req_t *req)
@@ -87,7 +87,7 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 	}
 
 	/* api function returns something, send back to http client */
-	err = uri_api_send_out(req, post_req);
+	err = uri_api_send_out(req, post_req, 0);
 	goto put_buf;
 
 end:
@@ -101,19 +101,21 @@ put_buf:
 	return err;
 }
 
-int uri_api_send_out(httpd_req_t *req, post_request_t *post_req)
+int uri_api_send_out(httpd_req_t *req, post_request_t *post_req, int err)
 {
-	int err;
 	char *buf;
 	uint32_t buf_len;
 
 	buf = post_req->buf;
 	buf_len = static_buffer_get_buf_size() - sizeof(post_request_t);
-
-	httpd_resp_set_type(req, HTTPD_TYPE_JSON);
-	err = !cJSON_PrintPreallocated(post_req->json.out, buf, buf_len - 5, 0);
-	cJSON_Delete(post_req->json.out);
 	cJSON_Delete(post_req->json.in);
+	if (post_req->json.out) {
+		ESP_LOGI(TAG, "json out ok");
+		httpd_resp_set_type(req, HTTPD_TYPE_JSON);
+		err = !cJSON_PrintPreallocated(post_req->json.out, buf, buf_len - 5, 0);
+		cJSON_Delete(post_req->json.out);
+	}
+
 	if (unlikely(err)) {
 		httpd_resp_set_status(req, HTTPD_500);
 		return httpd_resp_send(req, NULL, 0);
@@ -126,11 +128,13 @@ void async_send_out_cb(void *arg, int module_status)
 {
 	post_request_t *req = arg;
 	if (module_status != API_JSON_OK) {
-		httpd_sess_trigger_close(req->req_out->handle,
-		                         httpd_req_to_sockfd(req->req_out->handle));
+		/* BUG: httpd_req_to_sockfd cause crash, fd not closed for the moment
+		 * issue is opened on esp-idf github */
+//		httpd_sess_trigger_close(req->req_out->handle,
+//		                         httpd_req_to_sockfd(req->req_out->handle));
 	}
 
-	uri_api_send_out(req->req_out, req);
+	uri_api_send_out(req->req_out, req, module_status);
 
 	/* clean resources */
 	httpd_req_async_handler_complete(req->req_out);
@@ -150,7 +154,6 @@ static const httpd_uri_t uri_api = {
 
 static int URI_API_INIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &uri_api;
-	api_json_router_init();
 	return 0;
 }
 

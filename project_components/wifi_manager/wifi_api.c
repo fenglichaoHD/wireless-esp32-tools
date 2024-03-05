@@ -27,9 +27,6 @@ static int rssi_comp(const void *a, const void *b)
 
 /**
  * @brief blocking function
- * @param number
- * @param ap_info
- * @return
  */
 int wifi_api_get_scan_list(uint16_t *number, wifi_api_ap_info_t *ap_info)
 {
@@ -76,13 +73,12 @@ static void wifi_manager_scan_done(uint16_t ap_found, wifi_ap_record_t *records,
 	scan_done_cb(ap_found, ap_info, arg);
 }
 
-int wifi_api_trigger_scan(uint16_t *max_ap_count, wifi_api_scan_done_cb cb, void *cb_arg)
+int wifi_api_connect(const char *ssid, const char *password)
 {
-	int err;
-	err = wifi_manager_trigger_scan(wifi_manager_scan_done, cb_arg);
-	if (err) {
-		return err;
-	}
-	scan_done_cb = cb;
-	return 0;
+	return wifi_manager_connect(ssid, password);
+}
+
+int wifi_api_disconnect(void)
+{
+	return wifi_manager_disconnect();
 }
