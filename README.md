@@ -19,6 +19,7 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 1. SoC Compatibility
     - [x] ESP32
     - [x] ESP32C3
+    - [x] ESP32S3
     
 2. Debug Communication Mode
     - [x] SWD
@@ -100,6 +101,34 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 | nRESET             | GPIO26  |
 | TVCC               | 3V3     |
 | GND                | GND     |
+
+</details>
+
+<details>
+<summary>ESP32S3</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO12 |
+| SWDIO          | GPIO11 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |        |
+|--------------------|--------|
+| TCK                | GPIO12 |
+| TMS                | GPIO11 |
+| TDI                | GPIO10 |
+| TDO                | GPIO9  |
+| nTRST \(optional\) | GPIO14 |
+| nRESET             | GPIO13 |
+| TVCC               | 3V3    |
+| GND                | GND    |
+
 
 </details>
 

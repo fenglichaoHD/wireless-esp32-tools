@@ -17,7 +17,7 @@ jobs:
     continue-on-error: false
     strategy:
       matrix:
-        target-hardware: [esp32c3,esp32]
+        target-hardware: [esp32c3,esp32,esp32s3]
 
 
     steps:
@@ -69,6 +69,16 @@ jobs:
 
     - name: merge bin files (esp32c3)
       if: matrix.target-hardware == 'esp32c3'
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v5.2.1
+        target: ${{ matrix.target-hardware }}
+        path: './'
+        command: esptool.py --chip ${{ matrix.target-hardware }} merge_bin -o build/wireless_tools_esp32_full.bin 0x0 build/bootloader/bootloader.bin 0xF000 build/partition_table/partition-table.bin 0x20000 build/wireless_tools_esp32.bin
+
+
+    - name: merge bin files (esp32s3)
+      if: matrix.target-hardware == 'esp32s3'
       uses: espressif/esp-idf-ci-action@v1
       with:
         esp_idf_version: v5.2.1

@@ -53,6 +53,11 @@ __STATIC_INLINE __UNUSED void GPIO_FUNCTION_SET(int io_num)
   }
   PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[io_num], PIN_FUNC_GPIO);
 }
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+__STATIC_INLINE __UNUSED void GPIO_FUNCTION_SET(int io_num)
+{
+  gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[io_num], PIN_FUNC_GPIO);
+}
 #endif
 
 
@@ -77,6 +82,13 @@ __STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
     // PP out
     GPIO.pin[io_num].pad_driver = 0;
 }
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+__STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
+{
+	gpio_ll_output_enable(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num);
+	// PP out
+	gpio_ll_od_disable(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num);
+}
 #endif
 
 
@@ -90,14 +102,14 @@ __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_LOW(int io_num)
 {
   GPIO.out_w1tc |= (0x1 << io_num);
 }
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_HIGH(int io_num)
 {
-  gpio_ll_set_level(&GPIO, io_num, 1);
+  gpio_ll_set_level(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num, 1);
 }
 __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_LOW(int io_num)
 {
-  gpio_ll_set_level(&GPIO, io_num, 0);
+  gpio_ll_set_level(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num, 0);
 }
 #endif
 
@@ -107,10 +119,10 @@ __STATIC_INLINE __UNUSED int GPIO_GET_LEVEL(int io_num)
 {
   return ((GPIO.in >> io_num) & 0x1) ? 1 : 0;
 }
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_INLINE __UNUSED int GPIO_GET_LEVEL(int io_num)
 {
-  return gpio_ll_get_level(&GPIO, io_num);
+  return gpio_ll_get_level(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num);
 }
 #endif
 
@@ -124,6 +136,14 @@ __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
   REG_CLR_BIT(GPIO_PIN_MUX_REG[io_num], FUN_PD);
   // enable pull up
   REG_SET_BIT(GPIO_PIN_MUX_REG[io_num], FUN_PU);
+}
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+__STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
+{
+	// disable pull down
+	gpio_ll_pulldown_dis(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num);
+	// enable pull up
+	gpio_ll_pullup_en(GPIO_HAL_GET_HW(GPIO_PORT_0), io_num);
 }
 #elif defined CONFIG_IDF_TARGET_ESP8266
 __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)

@@ -31,9 +31,10 @@
         #include "soc/soc/esp32/include/soc/spi_reg.h"
     #endif
     #include "hal/gpio_types.h"
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
     #include "soc/gpio_struct.h"
     #include "hal/gpio_ll.h"
+	#include "hal/gpio_hal.h"
     #include "hal/clk_gate_ll.h"
     #include "soc/gpio_struct.h"
     #include "soc/dport_access.h"
