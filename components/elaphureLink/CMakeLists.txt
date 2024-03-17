@@ -1,4 +1,7 @@
-set(COMPONENT_ADD_INCLUDEDIRS ".")
-set(COMPONENT_SRCS "./elaphureLink_protocol.c")
+file(GLOB SOURCES *.c)
 
-register_component()
+idf_component_register(
+        SRCS ${SOURCES}
+        INCLUDE_DIRS "."
+        PRIV_REQUIRES dap_proxy
+)

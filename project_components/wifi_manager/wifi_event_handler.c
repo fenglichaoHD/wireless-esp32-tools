@@ -191,7 +191,7 @@ void wifi_event_handler(void *handler_arg __attribute__((unused)),
 		wifi_event_ap_staconnected_t *event = event_data;
 		uint8_t *m = event->mac;
 		printf("event: WIFI_EVENT_AP_STADISCONNECTED\n");
-		printf("%02X:%02X:%02X:%02X:%02X:%02X is connected\n",
+		printf("%02X:%02X:%02X:%02X:%02X:%02X is disconnected\n",
 		       m[0], m[1], m[2], m[3], m[4], m[5]);
 		break;
 	}

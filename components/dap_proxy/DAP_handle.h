@@ -11,11 +11,10 @@ enum reset_handle_t
 };
 
 void handle_dap_data_request(usbip_stage2_header *header, uint32_t length);
-void handle_dap_data_response(usbip_stage2_header *header);
 void handle_swo_trace_response(usbip_stage2_header *header);
 void handle_dap_unlink();
 
-int fast_reply(uint8_t *buf, uint32_t length);
+int fast_reply(uint8_t *buf, uint32_t length, int dap_req_num);
 void DAP_Thread(void *argument);
 
 #endif
