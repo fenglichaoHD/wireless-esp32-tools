@@ -105,6 +105,8 @@ void start_webserver(void)
 	config.uri_match_fn = uri_match;
 	config.open_fn = web_server_on_open;
 	config.close_fn = web_server_on_close;
+	config.keep_alive_enable = 1;
+	config.keep_alive_count = 1;
 
 	ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
 	if ((err = httpd_start(&http_server, &config)) != ESP_OK) {

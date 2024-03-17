@@ -52,7 +52,7 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 		goto put_buf;
 	}
 
-	ESP_LOGI(TAG, "=========== RECEIVED DATA ==========");
+	ESP_LOGI(TAG, "=========== RECEIVED DATA ========== %d", httpd_req_to_sockfd(req));
 	ESP_LOGI(TAG, "%.*s", data_len, buf);
 	ESP_LOGI(TAG, "====================================");
 	ESP_LOGI(TAG, "heap min: %lu, cur: %lu", esp_get_minimum_free_heap_size(), esp_get_free_heap_size());
@@ -128,10 +128,8 @@ void async_send_out_cb(void *arg, int module_status)
 {
 	post_request_t *req = arg;
 	if (module_status != API_JSON_OK) {
-		/* BUG: httpd_req_to_sockfd cause crash, fd not closed for the moment
-		 * issue is opened on esp-idf github */
-//		httpd_sess_trigger_close(req->req_out->handle,
-//		                         httpd_req_to_sockfd(req->req_out->handle));
+		httpd_sess_trigger_close(req->req_out->handle,
+		                         httpd_req_to_sockfd(req->req_out));
 	}
 
 	uri_api_send_out(req->req_out, req, module_status);
