@@ -157,7 +157,7 @@ static const httpd_uri_t uri_api = {
 
 static int WS_REQ_INIT(const httpd_uri_t **uri_conf) {
 	*uri_conf = &uri_api;
-	xTaskCreate(heartbeat_task, "hb task", 1024, NULL, 3, &ws_ctx.task_heartbeat);
+	xTaskCreate(heartbeat_task, "hb task", 2048, NULL, 3, &ws_ctx.task_heartbeat);
 	return 0;
 }
 

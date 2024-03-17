@@ -63,11 +63,11 @@ jobs:
       name: Build
       run: |
         sudo apt-get install git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
-        wget https://github.com/espressif/esp-idf/releases/download/v5.2.0/esp-idf-v5.2.0.zip
-        unzip esp-idf-v5.2.0.zip
-        ./esp-idf-v5.2.0/install.sh esp32
-        . ./esp-idf-v5.2.0/export.sh
-        idf.py set-target esp32
+        wget https://github.com/espressif/esp-idf/releases/download/v5.2.1/esp-idf-v5.2.1.zip
+        unzip esp-idf-v5.2.1.zip
+        ./esp-idf-v5.2.1/install.sh esp32c3
+        . ./esp-idf-v5.2.1/export.sh
+        idf.py set-target esp32c3
         idf.py build
 
     - name: Perform CodeQL Analysis
