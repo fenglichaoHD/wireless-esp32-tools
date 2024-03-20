@@ -3,12 +3,19 @@
 #include "wifi_json_utils.h"
 #include "wifi_api.h"
 
+static void wifi_api_json_set_header(cJSON *root, uint16_t cmd)
+{
+	cJSON_AddNumberToObject(root, "cmd", cmd);
+	cJSON_AddNumberToObject(root, "module", WIFI_API_MODULE_ID);
+}
+
 cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info)
 {
 	cJSON *root;
 
 	root = cJSON_CreateObject();
 
+	wifi_api_json_set_header(root, WIFI_API_JSON_GET_AP_INFO);
 	cJSON_AddStringToObject(root, "ip", ip4addr_ntoa(&ap_info->ip));
 	cJSON_AddStringToObject(root, "gateway", ip4addr_ntoa(&ap_info->gateway));
 	cJSON_AddStringToObject(root, "netmask", ip4addr_ntoa(&ap_info->netmask));
@@ -30,6 +37,7 @@ cJSON *wifi_api_json_serialize_scan_list(wifi_api_ap_info_t *aps_info, uint16_t 
 	char mac_str[18];
 
 	root = cJSON_CreateObject();
+	wifi_api_json_set_header(root, WIFI_API_JSON_GET_SCAN);
 	cJSON *scan_list = cJSON_AddArrayToObject(root, "scan_list");
 
 	for (int i = 0; i < count; ++i) {

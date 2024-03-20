@@ -348,6 +348,8 @@ static void send_heartbeat(void *arg)
 	int err;
 	err = httpd_ws_send_frame_async(client_info->hd, client_info->fd, &ws_pkt);
 	if (err) {
+		ws_rm_fd(client_info->fd);
+		httpd_sess_trigger_close(client_info->hd, client_info->fd);
 		ESP_LOGE(TAG, "hb send err: %s", esp_err_to_name(err));
 	}
 }

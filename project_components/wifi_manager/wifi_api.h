@@ -3,6 +3,16 @@
 
 #include <lwip/ip4_addr.h>
 
+#define WIFI_API_MODULE_ID 1
+
+typedef enum wifi_api_json_cmd_t {
+	UNKNOWN = 0,
+	WIFI_API_JSON_GET_AP_INFO,
+	WIFI_API_JSON_CONNECT,
+	WIFI_API_JSON_GET_SCAN,
+	WIFI_API_JSON_DISCONNECT,
+} wifi_api_json_cmd_t;
+
 typedef struct wifi_api_ap_info_t {
 	ip4_addr_t ip;
 	ip4_addr_t gateway;

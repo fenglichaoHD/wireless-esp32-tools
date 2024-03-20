@@ -107,7 +107,7 @@ int wifi_api_json_disconnect(api_json_req_t *req)
 static int wifi_api_json_init(api_json_module_cfg_t *cfg)
 {
 	cfg->on_req = on_json_req;
-	cfg->module_id = 1;
+	cfg->module_id = WIFI_API_MODULE_ID;
 	return 0;
 }
 
