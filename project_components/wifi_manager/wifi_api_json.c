@@ -107,8 +107,12 @@ int wifi_api_json_connect(api_json_req_t *req)
 		return 1;
 	}
 
-	ESP_LOGI(TAG, "trigger connect\n");
-	return wifi_api_connect(ssid, password);
+	int err = wifi_api_connect(ssid, password);
+	if (err) {
+		return err;
+	}
+
+	return wifi_api_json_sta_get_ap_info(req);
 };
 
 int wifi_api_json_disconnect(api_json_req_t *req)

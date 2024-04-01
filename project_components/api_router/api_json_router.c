@@ -3,10 +3,12 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <esp_compiler.h>
+#include <esp_log.h>
+
+#define TAG __FILENAME__
 
 int api_json_router_init()
 {
-	api_json_module_dump();
 	return 0;
 }
 
@@ -31,7 +33,7 @@ int api_json_route(api_json_req_t *req, api_json_module_async_t *rsp)
 	cmd = cmd_json->valueint;
 	module_id = module_json->valueint;
 
-	printf("cmd %d received\n", cmd);
+	ESP_LOGI(TAG, "cmd %d received\n", cmd);
 
 	return api_json_module_call(module_id, cmd, req, rsp);
 }

@@ -44,7 +44,7 @@ static bool uri_match(const char *reference_uri, const char *uri_to_match, size_
 	/* ref should be shorter than target */
 	ref_length = strlen(reference_uri);
 	if (ref_length > match_upto) {
-		ESP_LOGI(TAG, "no match length");
+		ESP_LOGI(TAG, "no match length ref %s t: %s", reference_uri, uri_to_match);
 		return false;
 	}
 
@@ -74,7 +74,7 @@ static bool uri_match(const char *reference_uri, const char *uri_to_match, size_
 		return true;
 	}
 
-	ESP_LOGI(TAG, "fall back false");
+	ESP_LOGI(TAG, "fall back false %s t: %s", reference_uri, uri_to_match);
 	return false;
 }
 
