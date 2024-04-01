@@ -1,10 +1,3 @@
-<p align="center"><b>请注意：不同语言版本的翻译可能落后于项目的原始文档。请以原始文档为准。</b></p>
-
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/120061980-49274280-c092-11eb-9916-4965f6c48388.png"/></p>
-
-![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
-
-
 ## 简介
 
 只需要**一枚ESP芯片**即可开始无线调试！通过USBIP协议栈和CMSIS-DAP协议栈实现。
@@ -20,7 +13,6 @@
 ## 特性
 
 1. 支持的ESP芯片
-    - [x] ESP32
     - [x] ESP32C3
 
 2. 支持的调试接口：
@@ -42,62 +34,14 @@
 
 ### WIFI连接
 
-固件默认的WIFI SSID是`DAP`或者`OTA`，密码是`12345678`。
 
-你可以在[wifi_configuration.h](main/wifi_configuration.h)文件中添加多个无线接入点。
-
-你还可以在上面的配置文件中修改IP地址（但是我们更推荐你通过在路由器上绑定静态IP地址）。
-
-![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
 固件中已经内置了一个mDNS服务。你可以通过`dap.local`的地址访问到设备。
-
 
 ![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
 
 
 ### 调试接口连接
-
-
-<details>
-<summary>ESP32</summary>
-
-| SWD            |        |
-|----------------|--------|
-| SWCLK          | GPIO14 |
-| SWDIO          | GPIO13 |
-| TVCC           | 3V3    |
-| GND            | GND    |
-
-
---------------
-
-
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO14  |
-| TMS                | GPIO13  |
-| TDI                | GPIO18  |
-| TDO                | GPIO19  |
-| nTRST \(optional\) | GPIO25  |
-| nRESET             | GPIO26  |
-| TVCC               | 3V3     |
-| GND                | GND     |
-
---------------
-
-| Other              |               |
-|--------------------|---------------|
-| LED\_WIFI\_STATUS  | GPIO27        |
-| Tx                 | GPIO23        |
-| Rx                 | GPIO22        |
-
-
-> Rx和Tx用于TCP转发的串口，默认不开启该功能。
-
-
-</details>
-
 
 <details>
 <summary>ESP32C3</summary>
@@ -124,16 +68,6 @@
 | TVCC               | 3V3     |
 | GND                | GND     |
 
---------------
-
-| Other              |               |
-|--------------------|---------------|
-| LED\_WIFI\_STATUS  | GPIO10        |
-| Tx                 | GPIO19        |
-| Rx                 | GPIO18        |
-
-
-> Rx和Tx用于TCP转发的串口，默认不开启该功能。
 
 
 </details>
@@ -145,44 +79,15 @@
 
 你可以在本地构建或使用Github Action在线构建固件，然后下载固件进行烧写。
 
-### 使用Github Action在线构建固件
-
-详见：[Build with Github Action](https://github.com/windowsair/wireless-esp8266-dap/wiki/Build-with-Github-Action)
 
 ### 在本地构建并烧写
 
-
 <details>
-<summary>ESP8266</summary>
-
-1. 获取ESP8266 SDK
-
-    项目中已经随附了一个SDK。请不要使用其他版本的SDK。
-
-2. 编译和烧写
-
-    使用ESP-IDF编译系统进行构建。
-    更多的信息，请见：[Build System](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html "Build System")
-
-
-下面例子展示了在Windows上完成这些任务的一种可行方法：
-
-```bash
-# 编译
-python ./idf.py build
-# 烧写
-python ./idf.py -p /dev/ttyS5 flash
-```
-
-</details>
-
-
-<details>
-<summary>ESP32/ESP32C3</summary>
+<summary>ESP32C3</summary>
 
 1. 获取esp-idf
 
-    目前，请考虑使用esp-idf v4.4.2： https://github.com/espressif/esp-idf/releases/tag/v4.4.2
+    目前，请考虑使用esp-idf v5.2.1： https://github.com/espressif/esp-idf/releases/tag/v5.2.1
 
 2. 编译和烧写
 
@@ -193,6 +98,7 @@ python ./idf.py -p /dev/ttyS5 flash
 下面例子展示了在Windows上完成这些任务的一种可行方法：
 
 ```bash
+idf.py set-target esp32c3
 # 编译
 idf.py build
 # 烧写
@@ -206,7 +112,6 @@ idf.py -p /dev/ttyS5 flash
 
 
 > 我们还提供了预编译固件用于快速评估。详见 [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
-
 
 
 
@@ -256,11 +161,8 @@ idf.py -p /dev/ttyS5 flash
 - Logitech Arx Control
 - ...
 
-对于ESP8266, 这无异于UDP洪水攻击...😰
-
 
 周围的射频环境同样会造成影响，此外距离、网卡性能等也可能是需要考虑的。
-
 
 
 ## 文档
@@ -290,82 +192,16 @@ idf.py -p /dev/ttyS5 flash
 
 > Keil的操作时序与OpenOCD的有些不同。例如，OpenOCD在读取 "IDCODE "寄存器之前缺少SWD线复位序列。
 
-### 系统 OTA
-
-当这个项目被更新时，你可以通过无线方式更新固件。
-
-请访问以下网站了解OTA操作。[在线OTA](http://corsacota.surge.sh/?address=dap.local:3241)
-
-对于大多数ESP8266设备，你不需要关心闪存的大小。然而，闪存大小设置不当可能会导致OTA失败。在这种情况下，请用`idf.py menuconfig`改变闪存大小，或者修改`sdkconfig`：
-
-```
-# 选择一个flash大小
-CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
-
-# 然后设置flash大小
-CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
-```
-
-如果闪存大小为2MB，sdkconfig文件会看起来像这样：
-
-```
-CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
-```
-
-对于闪存大小为1MB的设备，如ESP8285，必须做以下修改。
-
-```
-CONFIG_PARTITION_TABLE_FILENAME="partitions_two_ota.1MB.csv"
-CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE="1MB"
-CONFIG_ESP8266_BOOT_COPY_APP=y
-```
-
-可以用esptool.py工具检查你使用的ESP设备闪存大小：
-
-```bash
-esptool.py -p (PORT) flash_id
-```
-
-### TCP转发的串口
-
-该功能在TCP和Uart之间提供了一个桥梁：
-```
-发送数据   ->  TCP  ->  Uart TX -> 外部设备
-
-接收数据   <-  TCP  <-  Uart Rx <- 外部设备
-```
-
-![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
-
-当TCP连接建立后，ESP芯片将尝试解决首次发送的文本。当文本是一个有效的波特率时，转发器就会切换到该波特率。例如，发送ASCII文本`115200`会将波特率切换为115200。
-由于性能原因，该功能默认不启用。你可以修改 [wifi_configuration.h](main/wifi_configuration.h) 来打开它。
-
-----
-
-## 开发
-
-请查看其他分支以了解最新的开发进展。我们欢迎任何形式的贡献，包括但不限于新功能、关于电路的想法和文档。
-
-如果你有什么想法，欢迎在下面提出：
-- [新的Issues](https://github.com/windowsair/wireless-esp8266-dap/issues)
-- [新的pull request](https://github.com/windowsair/wireless-esp8266-dap/pulls)
-
-
 # 致谢
 
 归功于以下项目、人员和组织。
 
+> - https://www.github.com/windowsair/wireless-esp8266-dap origin of this project
 > - https://github.com/thevoidnn/esp8266-wifi-cmsis-dap for adapter firmware based on CMSIS-DAP v1.0
 > - https://github.com/ARM-software/CMSIS_5 for CMSIS
 > - https://github.com/cezanne/usbip-win for usbip windows
 
-- [@windowsair](https://github.com/windowsair/wireless-esp8266-dap)
+- [@windowsair](https://www.github.com/windowsair/wireless-esp8266-dap)
 - [@HeavenSpree](https://www.github.com/HeavenSpree)
 - [@Zy19930907](https://www.github.com/Zy19930907)
 - [@caiguang1997](https://www.github.com/caiguang1997)

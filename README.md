@@ -1,7 +1,3 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/120061980-49274280-c092-11eb-9916-4965f6c48388.png"/></p>
-
-![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
-
 [中文](README_CN.md)
 
 ## Introduce
@@ -21,7 +17,6 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 ## Feature
 
 1. SoC Compatibility
-    - [x] ESP32
     - [x] ESP32C3
 
 2. Debug Communication Mode
@@ -32,8 +27,6 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
     - [x] USB-HID
     - [x] WCID & WinUSB (Default)
 
-4. Debug Trace (Uart)
-    - [x] Uart TCP Bridge
 
 5. More..
     - [x] SWD protocol based on SPI acceleration (Up to 40MHz)
@@ -46,13 +39,6 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 
 ### WIFI
 
-The default connected WIFI SSID is `DAP` or `OTA` , password `12345678`
-
-Support for specifying multiple possible WAP. It can be added here: [wifi_configuration.h](project_components/wifi_manager/wifi_configuration.h)
-
-You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
-
-![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
 There is built-in ipv4 only mDNS server. You can access the device using `dap.local`.
 
@@ -60,46 +46,6 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 
 ### Debugger
-
-<details>
-<summary>ESP32</summary>
-
-| SWD            |        |
-|----------------|--------|
-| SWCLK          | GPIO14 |
-| SWDIO          | GPIO13 |
-| TVCC           | 3V3    |
-| GND            | GND    |
-
-
---------------
-
-
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO14  |
-| TMS                | GPIO13  |
-| TDI                | GPIO18  |
-| TDO                | GPIO19  |
-| nTRST \(optional\) | GPIO25  |
-| nRESET             | GPIO26  |
-| TVCC               | 3V3     |
-| GND                | GND     |
-
---------------
-
-| Other              |               |
-|--------------------|---------------|
-| LED\_WIFI\_STATUS  | GPIO27        |
-| Tx                 | GPIO23        |
-| Rx                 | GPIO22        |
-
-
-> Rx and Tx is used for uart bridge, not enabled by default.
-
-
-</details>
-
 
 <details>
 <summary>ESP32C3</summary>
@@ -126,14 +72,6 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 | TVCC               | 3V3     |
 | GND                | GND     |
 
---------------
-
-| Other              |               |
-|--------------------|---------------|
-| LED\_WIFI\_STATUS  | GPIO10        |
-| Tx                 | GPIO19        |
-| Rx                 | GPIO18        |
-
 
 </details>
 
@@ -145,19 +83,15 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 You can build locally or use Github Action to build online and then download firmware to flash.
 
-### Build with Github Action Online
-
-See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-dap/wiki/Build-with-Github-Action)
-
 
 ### General build and Flash
 
 <details>
-<summary>ESP32/ESP32C3</summary>
+<summary>ESP32C3</summary>
 
 1. Get esp-idf
 
-    For now, please use esp-idf v4.4.2 : https://github.com/espressif/esp-idf/releases/tag/v4.4.2
+    For now, please use esp-idf v5.2.1 : https://github.com/espressif/esp-idf/releases/tag/v5.2.1
 
 2. Build & Flash
 
@@ -168,7 +102,7 @@ The following example shows a possible way to build:
 
 ```bash
 # Set build target
-idf.py set-target esp32
+idf.py set-target esp32c3
 # Build
 idf.py build
 # Flash
@@ -266,109 +200,6 @@ Note that if you want to use a 40MHz SPI acceleration, you need to specify the s
 
 > Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
 
-
-### System OTA
-
-When this project is updated, you can update the firmware over the air.
-
-Visit the following website for OTA operations: [online OTA](http://corsacota.surge.sh/?address=dap.local:3241)
-
-
-For most devices, you don't need to care about flash size. However, improper setting of the flash size may cause the OTA to fail. In this case, please change the flash size with `idf.py menuconfig`, or modify `sdkconfig`:
-
-```
-# Choose a flash size.
-CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
-
-# Then set a flash size
-CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
-```
-
-If flash size is 2MB, the sdkconfig file might look like this:
-
-```
-CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
-```
-
-
-For devices with 1MB flash size such as ESP8285, the following changes must be made:
-
-```
-CONFIG_PARTITION_TABLE_FILENAME="partitions_two_ota.1MB.csv"
-CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
-CONFIG_ESPTOOLPY_FLASHSIZE="1MB"
-CONFIG_ESP8266_BOOT_COPY_APP=y
-```
-
-The flash size of the board can be checked with the esptool.py tool:
-
-```bash
-esptool.py -p (PORT) flash_id
-```
-
-### Uart TCP Bridge
-
-This feature provides a bridge between TCP and Uart:
-```
-Send data   ->  TCP  ->  Uart TX -> external devices
-
-Recv data   <-  TCP  <-  Uart Rx <- external devices
-```
-
-![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
-
-When the TCP connection is established, bridge will try to resolve the text sent for the first packet. When the text is a valid baud rate, bridge will switch to it.
-For example, sending the ASCII text `115200` will switch the baud rate to 115200.
-
-
-For performance reasons, this feature is not enabled by default. You can modify [wifi_configuration.h](main/wifi_configuration.h) to turn it on.
-
-
-----
-
-## Develop
-
-Check other branches to know the latest development progress.
-
-Any kind of contribute is welcome, including but not limited to new features, ideas about circuits, documentation.
-
-You can also ask questions to make this project better.
-
-- [New issues](https://github.com/windowsair/wireless-esp8266-dap/issues)
-- [New pull](https://github.com/windowsair/wireless-esp8266-dap/pulls)
-
-
-### Issue
-
-2020.12.1
-
-TCP transmission speed needs to be further improved.
-
-2020.11.11
-
-Winusb is now available, but it is very slow.
-
-
-2020.2.4
-
-Due to the limitation of USB-HID (I'm not sure if this is a problem with USBIP or Windows), now each URB packet can only reach 255 bytes (About 1MBps bandwidth), which has not reached the upper limit of ESP8266 transmission bandwidth.
-
-I now have an idea to construct a Man-in-the-middle between the two to forward traffic, thereby increasing the bandwidth of each transmission.
-
-2020.1.31
-
-At present, the adaptation to WCID, WinUSB, etc. has all been completed. However, when transmitting data on the endpoint, we received an error message from USBIP. This is most likely a problem with the USBIP project itself.
-
-Due to the completeness of the USBIP protocol document, we have not yet understood its role in the Bulk transmission process, which may also lead to errors in subsequent processes.
-
-We will continue to try to make it work on USB HID. Once the USBIP problem is solved, we will immediately transfer it to work on WinUSB
-
-
 ------
 
 ## Credit
@@ -376,6 +207,7 @@ We will continue to try to make it work on USB HID. Once the USBIP problem is so
 
 Credits to the following project, people and organizations:
 
+> - https://www.github.com/windowsair/wireless-esp8266-dap origin of this project
 > - https://github.com/thevoidnn/esp8266-wifi-cmsis-dap for adapter firmware based on CMSIS-DAP v1.0
 > - https://github.com/ARM-software/CMSIS_5 for CMSIS
 > - https://github.com/cezanne/usbip-win for usbip windows
@@ -390,4 +222,3 @@ Credits to the following project, people and organizations:
 ## License
 
 [Apache2.0 LICENSE](LICENSE)
-

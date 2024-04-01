@@ -7,10 +7,11 @@
 
 typedef enum wifi_api_json_cmd_t {
 	UNKNOWN = 0,
-	WIFI_API_JSON_GET_AP_INFO,
+	WIFI_API_JSON_STA_GET_AP_INFO,
 	WIFI_API_JSON_CONNECT,
 	WIFI_API_JSON_GET_SCAN,
 	WIFI_API_JSON_DISCONNECT,
+	WIFI_API_JSON_AP_GET_INFO,
 } wifi_api_json_cmd_t;
 
 typedef struct wifi_api_ap_info_t {
@@ -22,7 +23,9 @@ typedef struct wifi_api_ap_info_t {
 	signed char rssi;
 } wifi_api_ap_info_t;
 
-void wifi_api_get_ap_info(wifi_api_ap_info_t *ap_info);
+void wifi_api_sta_get_ap_info(wifi_api_ap_info_t *ap_info);
+
+void wifi_api_ap_get_info(wifi_api_ap_info_t *ap_info);
 
 typedef void (*wifi_api_scan_done_cb)(uint16_t found, wifi_api_ap_info_t *aps, void *arg);
 

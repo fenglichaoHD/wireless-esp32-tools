@@ -36,7 +36,8 @@ typedef struct wifi_ctx_t {
 	};
 	uint8_t is_endless_connect:1;
 	uint8_t auto_reconnect:1;
-	uint8_t reserved:6;
+	uint8_t do_fast_connect:1; /* 0 delay connect on boot or just disconnected, else 5 seconds delay from each connection try */
+	uint8_t reserved:5;
 } wifi_ctx_t;
 
 static esp_netif_t *ap_netif;
@@ -84,13 +85,14 @@ void wifi_manager_init(void)
 
 	if (set_default_sta_cred() == 0) {
 		do_connect = 1;
+		ctx.do_fast_connect = 1;
 	}
 
 	/* TODO: Read from nvs */
 	esp_netif_ip_info_t ip_info;
-	IP4_ADDR(&ip_info.ip, 192, 168, 1, 1);
-	IP4_ADDR(&ip_info.gw, 192, 168, 1, 1);
-	IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+	IP4_ADDR_EXPAND(&ip_info.ip, WIFI_DEFAULT_AP_IP);
+	IP4_ADDR_EXPAND(&ip_info.gw, WIFI_DEFAULT_AP_GATEWAY);
+	IP4_ADDR_EXPAND(&ip_info.netmask, WIFI_DEFAULT_AP_NETMASK);
 
 	err = esp_netif_dhcps_stop(ap_netif);
 	if (err) {
@@ -120,6 +122,9 @@ void wifi_manager_init(void)
 	}
 }
 
+/**
+ * @brief called by wifi_event_handler on scan done
+ * */
 static void wifi_event_scan_channel_done(uint16_t number, wifi_ap_record_t *aps)
 {
 	ctx.scan.nr_aps_in_channel = number;
@@ -145,8 +150,7 @@ static int scan_loop()
 			return 1;
 		}
 		/* shadow wifi_event_scan_channel_done() called */
-		vTaskDelay(100);
-
+		vTaskDelay(pdMS_TO_TICKS(100));
 		ret = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000));
 		if (ret == 0) {
 			/* timeout */
@@ -166,6 +170,7 @@ int wifi_manager_get_scan_list(uint16_t *number, wifi_ap_record_t *aps)
 		if (ctx.is_endless_connect == 0) {
 			return 1;
 		}
+		/* Is in connecting mode */
 		ESP_LOGI(TAG, "deleting connecting %p", ctx.task);
 		vTaskDelete(ctx.task);
 		/* in case lock is released when deleting the task */
@@ -219,7 +224,6 @@ static void try_connect_done(void *arg, wifi_event_sta_connected_t *event)
 		ctx.conn.need_unlock = 0;
 		xSemaphoreGive(ctx.lock);
 	}
-	ESP_LOGI(TAG, "event done %p", ctx.task);
 }
 
 int set_default_sta_cred()
@@ -295,7 +299,12 @@ static void reconnection_task(void *arg)
 
 	do {
 		ESP_LOGI(TAG, "reco task: try connect, task %p", xTaskGetCurrentTaskHandle());
-		err = wifi_event_trigger_connect(0, try_connect_done, NULL);
+		if (ctx.do_fast_connect) {
+			err = wifi_event_trigger_connect(5, try_connect_done, NULL);
+		} else {
+			err = wifi_event_trigger_connect(0, try_connect_done, NULL);
+		}
+
 		if (err) {
 			ESP_LOGE(TAG, "trigger connect err: %s", esp_err_to_name(err));
 			break;
@@ -339,6 +348,7 @@ static void disconn_handler(void)
 	}
 
 	ESP_LOGI(TAG, "start reconn task");
+	ctx.do_fast_connect = 1;
 	xTaskCreate(reconnection_task, "reconn task", 4 * 1024, NULL, 7, NULL);
 }
 

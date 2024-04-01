@@ -9,13 +9,13 @@ static void wifi_api_json_set_header(cJSON *root, uint16_t cmd)
 	cJSON_AddNumberToObject(root, "module", WIFI_API_MODULE_ID);
 }
 
-cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info)
+cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info, wifi_api_json_cmd_t cmd)
 {
 	cJSON *root;
 
 	root = cJSON_CreateObject();
 
-	wifi_api_json_set_header(root, WIFI_API_JSON_GET_AP_INFO);
+	wifi_api_json_set_header(root, cmd);
 	cJSON_AddStringToObject(root, "ip", ip4addr_ntoa(&ap_info->ip));
 	cJSON_AddStringToObject(root, "gateway", ip4addr_ntoa(&ap_info->gateway));
 	cJSON_AddStringToObject(root, "netmask", ip4addr_ntoa(&ap_info->netmask));

@@ -42,7 +42,7 @@ void *static_buffer_get(uint32_t tick_wait)
 
 void static_buffer_put(void *ptr)
 {
-	printf("put buf %d\n", uxQueueMessagesWaiting(buf_queue));
+	//printf("put buf %d\n", uxQueueMessagesWaiting(buf_queue));
 	if (unlikely(xQueueSend(buf_queue, &ptr, 0) != pdTRUE)) {
 		assert(0);
 	}

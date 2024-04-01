@@ -1,8 +1,9 @@
 #include "wifi_api.h"
 #include "wifi_manager.h"
+#include "wifi_configuration.h"
 #include <esp_wifi.h>
 
-void wifi_api_get_ap_info(wifi_api_ap_info_t *ap_info)
+void wifi_api_sta_get_ap_info(wifi_api_ap_info_t *ap_info)
 {
 	wifi_ap_record_t ap_record;
 	esp_wifi_sta_get_ap_info(&ap_record);
@@ -16,6 +17,16 @@ void wifi_api_get_ap_info(wifi_api_ap_info_t *ap_info)
 	ip4_addr_set(&ap_info->ip, &ip_info.ip);
 	ip4_addr_set(&ap_info->gateway, &ip_info.gw);
 	ip4_addr_set(&ap_info->netmask, &ip_info.netmask);
+}
+
+void wifi_api_ap_get_info(wifi_api_ap_info_t *ap_info)
+{
+	strncpy(ap_info->ssid, WIFI_DEFAULT_AP_SSID, strlen(WIFI_DEFAULT_AP_SSID)+1);
+	esp_wifi_get_mac(WIFI_IF_AP, (uint8_t *) &ap_info->mac);
+	IP4_ADDR_EXPAND(&ap_info->ip, WIFI_DEFAULT_AP_IP);
+	IP4_ADDR_EXPAND(&ap_info->gateway, WIFI_DEFAULT_AP_GATEWAY);
+	IP4_ADDR_EXPAND(&ap_info->netmask, WIFI_DEFAULT_AP_NETMASK);
+	ap_info->rssi = 0;
 }
 
 static int rssi_comp(const void *a, const void *b)

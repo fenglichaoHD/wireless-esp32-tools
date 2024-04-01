@@ -83,14 +83,14 @@ static int8_t opened_socket = 0;
 static esp_err_t web_server_on_open(httpd_handle_t hd, int sockfd)
 {
 	opened_socket++;
-	printf("%d open, now: %d\n", sockfd, opened_socket);
+	ESP_LOGI(TAG, "%d open, now: %d", sockfd, opened_socket);
 	return ESP_OK;
 }
 
 static void web_server_on_close(httpd_handle_t hd, int sockfd)
 {
 	opened_socket--;
-	printf("%d closed, now: %d\n", sockfd, opened_socket);
+	ESP_LOGI(TAG, "%d closed, now: %d", sockfd, opened_socket);
 	close(sockfd);
 }
 

@@ -48,7 +48,7 @@ int uri_module_exit(httpd_handle_t server)
 
 int uri_module_add(uint8_t priority, uri_module_func init, uri_module_func exit)
 {
-	ESP_LOGE(TAG, "adding module %p", init);
+	ESP_LOGI(TAG, "adding module %p", init);
 
 	if (module_count >= URI_MODULE_MAX) {
 		ESP_LOGE(TAG, "too much module > URI_MODULE_MAX");
