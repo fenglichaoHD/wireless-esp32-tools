@@ -2,6 +2,8 @@
 
 #include <nvs_flash.h>
 
+#define WT_PARTITION_NAME "wt_nvs"
+
 void wt_nvs_init()
 {
 	// Initialize default NVS
@@ -13,11 +15,20 @@ void wt_nvs_init()
 		err = nvs_flash_init();
 	}
 	ESP_ERROR_CHECK(err);
+
+	err = nvs_flash_init_partition(WT_PARTITION_NAME);
+	if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		// NVS partition was truncated and needs to be erased
+		// Retry nvs_flash_init
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		err = nvs_flash_init_partition(WT_PARTITION_NAME);
+	}
+	ESP_ERROR_CHECK(err);
 }
 
 int wt_nvs_open(const char* namespace, nvs_handle_t *out_handle)
 {
-	return nvs_open(namespace, NVS_READWRITE, out_handle);
+	return nvs_open_from_partition(WT_PARTITION_NAME, namespace, NVS_READWRITE, out_handle);
 }
 
 void wt_nvs_close(nvs_handle_t handle)

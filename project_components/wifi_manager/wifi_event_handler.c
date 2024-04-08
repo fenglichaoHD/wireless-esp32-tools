@@ -9,6 +9,8 @@
 
 #define TAG __FILE_NAME__
 
+void event_on_connected(ip_event_got_ip_t *event);
+
 void ip_event_handler(void *handler_arg __attribute__((unused)),
                       esp_event_base_t event_base __attribute__((unused)),
                       int32_t event_id,
@@ -19,6 +21,7 @@ void ip_event_handler(void *handler_arg __attribute__((unused)),
 		ip_event_got_ip_t *event = event_data;
 		printf("STA GOT IP : %s\n",
 		       ip4addr_ntoa((const ip4_addr_t *) &event->ip_info.ip));
+		event_on_connected(event);
 		break;
 	}
 	case IP_EVENT_STA_LOST_IP:
@@ -130,8 +133,6 @@ int wifi_event_trigger_scan(uint8_t channel, wifi_event_scan_done_cb cb, uint16_
 
 static void reconnect_after_disco();
 
-void event_on_connected(wifi_event_sta_connected_t *event);
-
 void wifi_event_handler(void *handler_arg __attribute__((unused)),
                         esp_event_base_t event_base __attribute__((unused)),
                         int32_t event_id,
@@ -163,7 +164,6 @@ void wifi_event_handler(void *handler_arg __attribute__((unused)),
 		tcpip_adapter_create_ip6_linklocal(TCPIP_ADAPTER_IF_STA);
 #endif
 		event_ctx.is_connected = 1;
-		event_on_connected(event);
 		break;
 	}
 	case WIFI_EVENT_STA_DISCONNECTED: {
@@ -219,7 +219,7 @@ int wifi_event_trigger_connect(uint8_t attempt, wifi_event_connect_done_cb cb, v
 	return err;
 }
 
-void event_on_connected(wifi_event_sta_connected_t *event)
+void event_on_connected(ip_event_got_ip_t *event)
 {
 	if (event_ctx.conn.cb) {
 		event_ctx.conn.cb(event_ctx.conn.arg, event);

@@ -3,8 +3,10 @@ build/
 tmp/
 .history/
 sdkconfig.old
+sdkconfig
 .idea/
 dependencies.lock
+package-lock.json
 **/priv_note.md
 _priv_tools/
 project_components/wifi_manager/wifi_configuration.h

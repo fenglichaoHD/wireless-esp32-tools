@@ -30,7 +30,7 @@ typedef struct wifi_ctx_t {
 			uint8_t max_ap;
 		} scan;
 		struct {
-			wifi_event_sta_connected_t *event;
+			ip_event_got_ip_t *event;
 			uint8_t need_unlock; /* used when trigger connection from wifi_manager instead of wifi_api */
 		} conn;
 	};
@@ -84,6 +84,7 @@ void wifi_manager_init(void)
 	}
 
 	if (set_default_sta_cred() == 0) {
+		ESP_LOGI(TAG, "STA connect to saved cred");
 		do_connect = 1;
 		ctx.do_fast_connect = 1;
 	}
@@ -214,7 +215,7 @@ void *wifi_manager_get_sta_netif()
 }
 
 
-static void try_connect_done(void *arg, wifi_event_sta_connected_t *event)
+static void try_connect_done(void *arg, ip_event_got_ip_t *event)
 {
 	ctx.conn.event = event;
 	if (ctx.task) {
