@@ -1846,8 +1846,11 @@ void DAP_Setup(void) {
   DAP_SETUP();  // Device specific setup
 }
 
-
 void dap_os_delay(int ms)
 {
-  vTaskDelay(pdMS_TO_TICKS(ms));
+  if (CONFIG_FREERTOS_HZ >= 1000) {
+    vTaskDelay(pdMS_TO_TICKS(ms));
+  } else {
+    vTaskDelay(pdMS_TO_TICKS(ms) + 1);
+  }
 }

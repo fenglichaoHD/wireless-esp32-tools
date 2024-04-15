@@ -969,6 +969,7 @@ __STATIC_INLINE void DAP_SETUP(void)
   PORT_OFF();
 }
 
+/* minimum 1 tick delay */
 extern void dap_os_delay(int ms);
 /** Reset Target Device with custom specific I/O pin or command sequence.
 This function allows the optional implementation of a device specific reset sequence.
