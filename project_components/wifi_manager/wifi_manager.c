@@ -259,14 +259,17 @@ int wifi_manager_connect(const char *ssid, const char *password)
 	ret = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10000));
 
 	xSemaphoreGive(ctx.lock);
+	/* check connect done status */
 	if (ret == 0 || ctx.conn.event == NULL) {
 		ESP_LOGI(TAG, "conn error");
+		/* try to connect to last connected sta */
 		if (set_default_sta_cred() == 0) {
 			disconn_handler();
 		}
 		return 1;
 	}
 
+	/* connection success: overwrite last connected credential */
 	wifi_credential_t credential;
 	memcpy(credential.ssid, ssid, 32);
 	memcpy(credential.password, password, 64);
@@ -301,7 +304,8 @@ static void reconnection_task(void *arg)
 	do {
 		ESP_LOGI(TAG, "reco task: try connect, task %p", xTaskGetCurrentTaskHandle());
 		if (ctx.do_fast_connect) {
-			err = wifi_event_trigger_connect(5, try_connect_done, NULL);
+			ctx.do_fast_connect = 0;
+			err = wifi_event_trigger_connect(3, try_connect_done, NULL);
 		} else {
 			err = wifi_event_trigger_connect(0, try_connect_done, NULL);
 		}
