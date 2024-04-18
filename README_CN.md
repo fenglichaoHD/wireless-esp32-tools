@@ -13,6 +13,7 @@
 ## 特性
 
 1. 支持的ESP芯片
+    - [x] ESP32
     - [x] ESP32C3
 
 2. 支持的调试接口：
@@ -53,9 +54,7 @@
 | TVCC           | 3V3    |
 | GND            | GND    |
 
-
 --------------
-
 
 | JTAG               |         |
 |--------------------|---------|
@@ -69,6 +68,30 @@
 | GND                | GND     |
 
 
+</details>
+
+<details>
+<summary>ESP32</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO14 |
+| SWDIO          | GPIO13 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+--------------
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO14  |
+| TMS                | GPIO13  |
+| TDI                | GPIO18  |
+| TDO                | GPIO19  |
+| nTRST \(optional\) | GPIO25  |
+| nRESET             | GPIO26  |
+| TVCC               | 3V3     |
+| GND                | GND     |
 
 </details>
 
