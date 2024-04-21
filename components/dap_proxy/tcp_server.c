@@ -28,7 +28,7 @@ int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[1500];
+    uint8_t tcp_rx_buffer[1500] = {0};
     char addr_str[128];
     enum usbip_server_state_t usbip_state = WAIT_DEVLIST;
     uint8_t *data;
@@ -41,31 +41,31 @@ void tcp_server_task(void *pvParameters)
     while (1)
     {
 
-#ifdef CONFIG_EXAMPLE_IPV6
-	    struct sockaddr_in6 destAddr;
+#ifdef CONFIG_EXAMPLE_IPV4
+        struct sockaddr_in destAddr;
+        destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        destAddr.sin_family = AF_INET;
+        destAddr.sin_port = htons(DAP_PROXY_PORT);
+        addr_family = AF_INET;
+        ip_protocol = IPPROTO_IP;
+        inet_ntoa_r(destAddr.sin_addr, addr_str, sizeof(addr_str) - 1);
+#else // IPV6
+        struct sockaddr_in6 destAddr;
         bzero(&destAddr.sin6_addr.un, sizeof(destAddr.sin6_addr.un));
         destAddr.sin6_family = AF_INET6;
         destAddr.sin6_port = htons(DAP_PROXY_PORT);
         addr_family = AF_INET6;
         ip_protocol = IPPROTO_IPV6;
         inet6_ntoa_r(destAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-#else // IPV6
-	    struct sockaddr_in destAddr;
-	    destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	    destAddr.sin_family = AF_INET;
-	    destAddr.sin_port = htons(DAP_PROXY_PORT);
-	    addr_family = AF_INET;
-	    ip_protocol = IPPROTO_IP;
-	    inet_ntoa_r(destAddr.sin_addr, addr_str, sizeof(addr_str) - 1);
 #endif
 
         int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
         if (listen_sock < 0)
         {
-	        printf("Unable to create socket: errno %d\r\n", errno);
+            printf("Unable to create socket: errno %d\r\n", errno);
             break;
         }
-	    printf("Socket created\r\n");
+        printf("Socket created\r\n");
 
         setsockopt(listen_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
         setsockopt(listen_sock, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
@@ -73,18 +73,18 @@ void tcp_server_task(void *pvParameters)
         int err = bind(listen_sock, (struct sockaddr *)&destAddr, sizeof(destAddr));
         if (err != 0)
         {
-	        printf("Socket unable to bind: errno %d\r\n", errno);
+            printf("Socket unable to bind: errno %d\r\n", errno);
             break;
         }
-	    printf("Socket binded\r\n");
+        printf("Socket binded\r\n");
 
         err = listen(listen_sock, 1);
         if (err != 0)
         {
-	        printf("Error occured during listen: errno %d\r\n", errno);
+            printf("Error occured during listen: errno %d\r\n", errno);
             break;
         }
-	    printf("Socket listening\r\n");
+        printf("Socket listening\r\n");
 
 #ifdef CONFIG_EXAMPLE_IPV6
         struct sockaddr_in6 sourceAddr; // Large enough for both IPv4 or IPv6
@@ -97,12 +97,12 @@ void tcp_server_task(void *pvParameters)
             kSock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
             if (kSock < 0)
             {
-	            printf("Unable to accept connection: errno %d\r\n", errno);
+                printf("Unable to accept connection: errno %d\r\n", errno);
                 break;
             }
             setsockopt(kSock, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
             setsockopt(kSock, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
-	        printf("Socket accepted\r\n");
+            printf("Socket accepted\r\n");
 
             // Read header
             sz = 4;
@@ -127,6 +127,10 @@ void tcp_server_task(void *pvParameters)
                 else
                     usbip_state = WAIT_IMPORT;
                 usbip_worker(tcp_rx_buffer, sizeof(tcp_rx_buffer), &usbip_state);
+            } else if (header == 0x47455420) { // string "GET "
+#ifdef CONFIG_USE_WEBSOCKET_DAP
+                websocket_worker(kSock, tcp_rx_buffer, sizeof(tcp_rx_buffer));
+#endif
             } else {
                 printf("Unknown protocol\n");
             }
@@ -134,7 +138,7 @@ void tcp_server_task(void *pvParameters)
 cleanup:
             if (kSock != -1)
             {
-	            printf("Shutting down socket and restarting...\r\n");
+                printf("Shutting down socket and restarting...\r\n");
                 //shutdown(kSock, 0);
                 close(kSock);
 
@@ -143,7 +147,7 @@ cleanup:
 
                 kRestartDAPHandle = RESET_HANDLE;
                 if (kDAPTaskHandle)
-    	            xTaskNotifyGive(kDAPTaskHandle);
+                    xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);
