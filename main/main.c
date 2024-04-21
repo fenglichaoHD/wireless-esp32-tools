@@ -12,6 +12,7 @@
 #include "web_server.h"
 #include "static_buffer.h"
 #include "request_runner.h"
+#include "uart_tcp_bridge.h"
 
 #include <assert.h>
 
@@ -33,4 +34,6 @@ void app_main()
 
     // DAP handle task
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, NULL);
+
+	xTaskCreate(uart_bridge_task, "uart_server", 4096, NULL, 2, NULL);
 }

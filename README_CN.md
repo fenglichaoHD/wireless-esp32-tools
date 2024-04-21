@@ -121,7 +121,7 @@
 | TVCC               | 3V3    |
 | GND                | GND    |
 
-
+</details>
 
 ----
 
@@ -158,12 +158,10 @@ idf.py -p /dev/ttyS5 flash
 
 > 位于项目根目录的`idf.py`脚本仅适用于较老的ESP8266设备，请不要在ESP32设备上使用。
 
-</details>
-
 
 > 我们还提供了预编译固件用于快速评估。详见 [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
 
-
+</details>
 
 ## 使用
 
@@ -241,6 +239,27 @@ idf.py -p /dev/ttyS5 flash
 ```
 
 > Keil的操作时序与OpenOCD的有些不同。例如，OpenOCD在读取 "IDCODE "寄存器之前缺少SWD线复位序列。
+
+### TCP转发的串口
+
+TCP端口：1234
+
+默认UART波特率：74880
+
+该功能在TCP和Uart之间提供了一个桥梁：
+```
+发送数据   ->  TCP  ->  Uart TX -> 外部设备
+
+接收数据   <-  TCP  <-  Uart Rx <- 外部设备
+```
+
+![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
+
+当TCP连接建立后，ESP芯片将尝试解决首次发送的文本。当文本是一个有效的波特率时，转发器就会切换到该波特率。例如，发送ASCII文本`115200`会将波特率切换为115200。
+由于性能原因，该功能默认不启用。你可以修改 [wifi_configuration.h](main/wifi_configuration.h) 来打开它。
+
+
+-----
 
 # 致谢
 

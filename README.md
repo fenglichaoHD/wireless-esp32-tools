@@ -29,6 +29,8 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
     - [x] USB-HID
     - [x] WCID & WinUSB (Default)
 
+4. Debug Trace (Uart)
+    - [x] Uart TCP Bridge
 
 5. More..
     - [x] SWD protocol based on SPI acceleration (Up to 40MHz)
@@ -256,6 +258,27 @@ Note that if you want to use a 40MHz SPI acceleration, you need to specify the s
 ```
 
 > Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
+
+
+### Uart TCP Bridge
+
+TCP server on PORT 1234.
+
+UART default baud: 74880
+
+This feature provides a bridge between TCP and Uart:
+
+
+```
+Send data   ->  TCP  ->  Uart TX -> external devices
+
+Recv data   <-  TCP  <-  Uart Rx <- external devices
+```
+
+![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
+
+When the TCP connection is established, bridge will try to resolve the text sent for the first packet. When the text is a valid baud rate, bridge will switch to it.
+For example, sending the ASCII text `115200` will switch the baud rate to 115200.
 
 ------
 
