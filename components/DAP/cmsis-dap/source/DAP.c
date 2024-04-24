@@ -273,6 +273,17 @@ static uint32_t DAP_Disconnect(uint8_t *response) {
 //   return:   number of bytes in response
 static uint32_t DAP_ResetTarget(uint8_t *response) {
 
+	if (DAP_Data.debug_port == DAP_PORT_SWD) {
+		/* Workaround for software reset */
+		uint32_t AIRCR_REG_ADDR = 0xE000ED0C;
+		/* TODO: read AIRCR, retrieve AIRCR_PRIGROUP bits and OR to the write */
+		uint32_t AIRCR_RESET_VAL = (0x05FA << 16 | 1 << 2); /* Vector key | SYSRESETREQ bit */
+		SWD_Transfer(0x05,&AIRCR_REG_ADDR);
+		dap_os_delay(2);
+		SWD_Transfer(0x0d,&AIRCR_RESET_VAL);
+	}
+
+
   *(response+1) = RESET_TARGET();
   *(response+0) = DAP_OK;
   return (2U);
