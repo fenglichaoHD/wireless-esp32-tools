@@ -21,6 +21,7 @@
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 
+extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;
 
 int kSock = -1;
@@ -141,6 +142,8 @@ cleanup:
                 el_process_buffer_free();
 
                 kRestartDAPHandle = RESET_HANDLE;
+                if (kDAPTaskHandle)
+    	            xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);

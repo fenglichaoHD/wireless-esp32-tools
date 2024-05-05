@@ -46,6 +46,7 @@ typedef struct
 
 
 int kRestartDAPHandle = NO_SIGNAL;
+TaskHandle_t kDAPTaskHandle = NULL;
 
 
 static DapPacket_t DAPDataProcessed;
@@ -103,11 +104,13 @@ void handle_dap_data_request(usbip_stage2_header *header, uint32_t length)
     // always send constant size buf -> cuz we don't care about the IN packet size
     // and to unify the style, we set aside the length of the section
     xRingbufferSend(dap_dataIN_handle, data_in - sizeof(uint32_t), DAP_HANDLE_SIZE, portMAX_DELAY);
+    xTaskNotifyGive(kDAPTaskHandle);
 
 #else
     send_stage2_submit_data_fast(header, NULL, 0);
 
     xRingbufferSend(dap_dataIN_handle, data_in, DAP_HANDLE_SIZE, portMAX_DELAY);
+    xTaskNotifyGive(kDAPTaskHandle);
 
 #endif
 
@@ -150,6 +153,7 @@ void DAP_Thread(void *argument)
     dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
     dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
     data_response_mux = xSemaphoreCreateMutex();
+    kDAPTaskHandle = xTaskGetCurrentTaskHandle();
     size_t packetSize;
     int resLength;
     DapPacket_t *item;
