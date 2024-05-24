@@ -15,7 +15,7 @@ typedef struct req_send_out_cb_t {
 } req_send_out_cb_t;
 
 typedef struct req_module_cb_t {
-	int (*helper_cb)(void *arg);
+	int (*cb)(void *arg);
 	void *arg;
 } req_module_cb_t;
 

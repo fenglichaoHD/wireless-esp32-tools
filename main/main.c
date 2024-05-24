@@ -10,7 +10,7 @@
 #include "wt_storage.h"
 #include "wifi_manager.h"
 #include "web_server.h"
-#include "static_buffer.h"
+#include "memory_pool.h"
 #include "request_runner.h"
 #include "uart_tcp_bridge.h"
 
@@ -18,17 +18,16 @@
 
 void app_main()
 {
-	assert(static_buffer_init() == 0);
+	assert(memory_pool_init() == 0); // static buffer
 	assert(request_runner_init() == 0);
 	wt_storage_init();
 	ESP_ERROR_CHECK(esp_netif_init());
 	ESP_ERROR_CHECK(esp_event_loop_create_default());
+	wt_mdns_init();
 
 	wifi_manager_init();
     DAP_Setup();
 	start_webserver();
-
-	wt_mdns_init();
 
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
 

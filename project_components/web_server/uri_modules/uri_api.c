@@ -1,7 +1,7 @@
 #include "web_uri_module.h"
 #include "api_json_router.h"
 #include "request_runner.h"
-#include "static_buffer.h"
+#include "memory_pool.h"
 
 #include <esp_http_server.h>
 #include <esp_log.h>
@@ -32,13 +32,13 @@ static esp_err_t api_post_handler(httpd_req_t *req)
 	char *buf;
 	uint32_t remaining = req->content_len;
 
-	buf_len = static_buffer_get_buf_size() - sizeof(post_request_t);
+	buf_len = memory_pool_get_buf_size() - sizeof(post_request_t);
 	if (unlikely(buf_len < remaining)) {
 		ESP_LOGE(TAG, "req size %lu > buf_len %lu", remaining, buf_len);
 		return ESP_FAIL;
 	}
 
-	post_req = static_buffer_get(pdMS_TO_TICKS(20));
+	post_req = memory_pool_get(pdMS_TO_TICKS(20));
 	if (unlikely(post_req == NULL)) {
 		ESP_LOGE(TAG, "static buf busy");
 		return ESP_FAIL;
@@ -97,7 +97,7 @@ end:
 		ESP_LOGE(TAG, "resp_send err: %s", esp_err_to_name(err));
 	}
 put_buf:
-	static_buffer_put(post_req);
+	memory_pool_put(post_req);
 	return err;
 }
 
@@ -107,7 +107,7 @@ int uri_api_send_out(httpd_req_t *req, post_request_t *post_req, int err)
 	uint32_t buf_len;
 
 	buf = post_req->buf;
-	buf_len = static_buffer_get_buf_size() - sizeof(post_request_t);
+	buf_len = memory_pool_get_buf_size() - sizeof(post_request_t);
 	cJSON_Delete(post_req->json.in);
 	if (post_req->json.out) {
 		ESP_LOGI(TAG, "json out ok");
@@ -136,7 +136,7 @@ void async_send_out_cb(void *arg, int module_status)
 
 	/* clean resources */
 	httpd_req_async_handler_complete(req->req_out);
-	static_buffer_put(req);
+	memory_pool_put(req);
 };
 
 /**

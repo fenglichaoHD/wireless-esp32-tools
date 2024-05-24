@@ -9,13 +9,13 @@
 
 #include <stdint.h>
 
-int static_buffer_init();
+int memory_pool_init();
 
-void *static_buffer_get(uint32_t tick_wait);
+void *memory_pool_get(uint32_t tick_wait);
 
-void static_buffer_put(void *ptr);
+void memory_pool_put(void *ptr);
 
-uint32_t static_buffer_get_buf_size();
+uint32_t memory_pool_get_buf_size();
 
 
 #endif //STATIC_BUFFER_H_GUARD

@@ -25,12 +25,13 @@ typedef enum api_json_req_status_e {
 	API_JSON_OK = 0,
 	API_JSON_ASYNC = 1,
 	API_JSON_BAD_REQUEST = 2,
+	API_JSON_INTERNAL_ERR = 3,
 } api_json_req_status_e;
 
 typedef int (*api_json_on_req)(uint16_t cmd, api_json_req_t *req, api_json_module_async_t *rsp);
 
 typedef struct api_json_module_cfg_t {
-	api_json_on_req on_req;
+	api_json_on_req on_req; /* input request callback */
 	uint8_t module_id;
 } api_json_module_cfg_t;
 
@@ -40,9 +41,6 @@ void api_json_module_dump();
 
 int api_json_module_add(api_json_init_func);
 
-/**
- * @brief Register a module that will be init with PRI(priority) order.
- */
 #define API_JSON_MODULE_REGISTER(PRI, INIT) \
   __attribute__((used, constructor(PRI))) void cons_ ## INIT(); \
   void cons_ ## INIT() { api_json_module_add(INIT); }

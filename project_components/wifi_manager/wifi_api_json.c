@@ -19,7 +19,7 @@ static int wifi_api_json_disconnect(api_json_req_t *req);
 
 static int wifi_api_json_ap_get_info(api_json_req_t *req);
 
-
+/* the upper caller call cb() with void *, this let us use custom function arg */
 static int async_helper_cb(void *arg)
 {
 	api_json_module_req_t *req = arg;
@@ -30,7 +30,7 @@ static inline int set_async(api_json_req_t *req, api_json_module_async_t *async,
 {
 	async->module.func = func;
 	async->module.arg = req;
-	async->req_task.module.helper_cb = async_helper_cb;
+	async->req_task.module.cb = async_helper_cb;
 	async->req_task.module.arg = &async->module;
 	return API_JSON_ASYNC;
 }
@@ -52,7 +52,6 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_module_async_
 		return wifi_api_json_disconnect(req);
 	case WIFI_API_JSON_AP_GET_INFO:
 		return wifi_api_json_ap_get_info(req);
-		break;
 	}
 
 	ESP_LOGI(TAG, "cmd %d not executed\n", cmd);
@@ -127,7 +126,7 @@ int wifi_api_json_disconnect(api_json_req_t *req)
 static int wifi_api_json_init(api_json_module_cfg_t *cfg)
 {
 	cfg->on_req = on_json_req;
-	cfg->module_id = WIFI_API_MODULE_ID;
+	cfg->module_id = WIFI_MODULE_ID;
 	return 0;
 }
 

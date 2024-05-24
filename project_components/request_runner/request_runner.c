@@ -26,7 +26,7 @@ _Noreturn void req_long_task(void *arg)
 		if (unlikely(xQueueReceive(long_run_queue, &req, portMAX_DELAY) != pdTRUE)) {
 			continue;
 		}
-		req->status = req->module.helper_cb(req->module.arg);
+		req->status = req->module.cb(req->module.arg);
 
 		/* if send out queue is busy, set status and let the cb to cancel send out
 		 * */

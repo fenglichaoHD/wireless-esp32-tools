@@ -6,7 +6,7 @@
 static void wifi_api_json_set_header(cJSON *root, uint16_t cmd)
 {
 	cJSON_AddNumberToObject(root, "cmd", cmd);
-	cJSON_AddNumberToObject(root, "module", WIFI_API_MODULE_ID);
+	cJSON_AddNumberToObject(root, "module", WIFI_MODULE_ID);
 }
 
 cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info, wifi_api_json_cmd_t cmd)

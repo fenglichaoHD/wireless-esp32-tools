@@ -3,7 +3,7 @@
 
 #include <lwip/ip4_addr.h>
 
-#define WIFI_API_MODULE_ID 1
+#define WIFI_MODULE_ID 1
 
 typedef enum wifi_api_json_cmd_t {
 	UNKNOWN = 0,

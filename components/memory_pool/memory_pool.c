@@ -4,17 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "static_buffer.h"
+#include "memory_pool.h"
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
-#define BUFFER_NR 4
+#define BUFFER_NR 8
 #define BUFFER_SZ 2048
 
 static uint8_t buf[BUFFER_NR][BUFFER_SZ];
+
+/* TODO: use CAS */
 static QueueHandle_t buf_queue = NULL;
 
-int static_buffer_init()
+int memory_pool_init()
 {
 	if (buf_queue != NULL)
 		return 0;
@@ -33,14 +35,14 @@ int static_buffer_init()
 	return 0;
 }
 
-void *static_buffer_get(uint32_t tick_wait)
+void *memory_pool_get(uint32_t tick_wait)
 {
 	void *ptr = NULL;
 	xQueueReceive(buf_queue, &ptr, tick_wait);
 	return ptr;
 }
 
-void static_buffer_put(void *ptr)
+void memory_pool_put(void *ptr)
 {
 	//printf("put buf %d\n", uxQueueMessagesWaiting(buf_queue));
 	if (unlikely(xQueueSend(buf_queue, &ptr, 0) != pdTRUE)) {
@@ -48,7 +50,7 @@ void static_buffer_put(void *ptr)
 	}
 }
 
-uint32_t static_buffer_get_buf_size()
+inline uint32_t memory_pool_get_buf_size()
 {
 	return BUFFER_SZ;
 }

@@ -2,7 +2,7 @@
 #define WT_MDNS_CONFIG_H_GUARD
 
 #define MDSN_DEFAULT_HOSTNAME "dap" // + serial number (4 char)
-#define MDSN_INSTANCE_DESC "无线STM32调试器 by 允斯工作室"
+#define MDSN_INSTANCE_DESC "ESP32 无线透传"
 
 void wt_mdns_init();
 
