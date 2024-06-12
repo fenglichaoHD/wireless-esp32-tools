@@ -20,7 +20,7 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
     - [x] ESP32
     - [x] ESP32C3
     - [x] ESP32S3
-    
+
 2. Debug Communication Mode
     - [x] SWD
     - [x] JTAG
@@ -35,6 +35,8 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 5. More..
     - [x] SWD protocol based on SPI acceleration (Up to 40MHz)
     - [x] Support for [elaphureLink](https://github.com/windowsair/elaphureLink), fast Keil debug without drivers
+    - [x] Support for [elaphure-dap.js](https://github.com/windowsair/elaphure-dap.js), online ARM Cortex-M firmware flash
+    - [x] Support for OpenOCD/pyOCD
     - [x] ...
 
 
@@ -43,13 +45,52 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 
 ### WIFI
 
+The default connected WIFI SSID is `无线DAP` , password `12345678`
+
+Support for specifying multiple possible WAP. It can be added here: [wifi_configuration.h](main/wifi_configuration.h)
+
+You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
+
+![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
+
 
 There is built-in ipv4 only mDNS server. You can access the device using `dap.local`.
 
 ![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
 
 
+
 ### Debugger
+
+
+
+<details>
+<summary>ESP32</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO14 |
+| SWDIO          | GPIO13 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO14  |
+| TMS                | GPIO13  |
+| TDI                | GPIO18  |
+| TDO                | GPIO19  |
+| nTRST \(optional\) | GPIO25  |
+| nRESET             | GPIO26  |
+| TVCC               | 3V3     |
+| GND                | GND     |
+
+</details>
+
 
 <details>
 <summary>ESP32C3</summary>
@@ -80,32 +121,6 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 </details>
 
 
-
-<details>
-<summary>ESP32</summary>
-
-| SWD            |        |
-|----------------|--------|
-| SWCLK          | GPIO14 |
-| SWDIO          | GPIO13 |
-| TVCC           | 3V3    |
-| GND            | GND    |
-
---------------
-
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO14  |
-| TMS                | GPIO13  |
-| TDI                | GPIO18  |
-| TDO                | GPIO19  |
-| nTRST \(optional\) | GPIO25  |
-| nRESET             | GPIO26  |
-| TVCC               | 3V3     |
-| GND                | GND     |
-
-</details>
-
 <details>
 <summary>ESP32S3</summary>
 
@@ -133,7 +148,6 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 
 </details>
-
 
 ----
 
@@ -247,18 +261,12 @@ When you select max clock, we will take the following actions:
 
 This project was originally designed to run on Keil, but now you can also perform firmware flash on OpenOCD.
 
-Note that if you want to use a 40MHz SPI acceleration, you need to specify the speed after the target device is connected, otherwise it will fail with the beginning.
-
 ```bash
-# Run before approaching the flash command
-> adapter speed 10000
-
 > halt
 > flash write_image [erase] [unlock] filename [offset] [type]
 ```
 
-> Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
-
+> pyOCD is now supported.
 
 ### Uart TCP Bridge
 
@@ -267,8 +275,6 @@ TCP server on PORT 1234.
 UART default baud: 74880
 
 This feature provides a bridge between TCP and Uart:
-
-
 ```
 Send data   ->  TCP  ->  Uart TX -> external devices
 
@@ -313,6 +319,30 @@ For example, sending the ASCII text `115200` will switch the baud rate to 115200
 
 </details>
 
+2020.12.1
+
+TCP transmission speed needs to be further improved.
+
+2020.11.11
+
+Winusb is now available, but it is very slow.
+
+
+2020.2.4
+
+Due to the limitation of USB-HID (I'm not sure if this is a problem with USBIP or Windows), now each URB packet can only reach 255 bytes (About 1MBps bandwidth), which has not reached the upper limit of ESP8266 transmission bandwidth.
+
+I now have an idea to construct a Man-in-the-middle between the two to forward traffic, thereby increasing the bandwidth of each transmission.
+
+2020.1.31
+
+At present, the adaptation to WCID, WinUSB, etc. has all been completed. However, when transmitting data on the endpoint, we received an error message from USBIP. This is most likely a problem with the USBIP project itself.
+
+Due to the completeness of the USBIP protocol document, we have not yet understood its role in the Bulk transmission process, which may also lead to errors in subsequent processes.
+
+We will continue to try to make it work on USB HID. Once the USBIP problem is solved, we will immediately transfer it to work on WinUSB
+
+
 ------
 
 ## Credit
@@ -334,4 +364,5 @@ Credits to the following project, people and organizations:
 
 ## License
 
-[Apache2.0 LICENSE](LICENSE)
+[MIT LICENSE](LICENSE)
+

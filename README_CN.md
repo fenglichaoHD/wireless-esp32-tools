@@ -29,14 +29,16 @@
 
 5. 其它
     - [x] 通过SPI接口加速的SWD协议（最高可达40MHz）
-    - [x] 支持[elaphureLink](https://github.com/windowsair/elaphureLink)，无需驱动的快速Keil调试
+    - [x] 支持 [elaphureLink](https://github.com/windowsair/elaphureLink)，无需驱动的快速Keil 调试
+    - [x] 支持 [elaphure-dap.js](https://github.com/windowsair/elaphure-dap.js)，网页端的 ARM Cortex-M 设备固件烧录调试
+    - [x] 支持 OpenOCD/pyOCD
     - [x] ...
 
 ## 连接你的开发板
 
 ### WIFI连接
 
-
+固件默认的WIFI SSID是`无线DAP`或者`OTA`，密码是`12345678`。
 
 固件中已经内置了一个mDNS服务。你可以通过`dap.local`的地址访问到设备。
 
@@ -44,6 +46,32 @@
 
 
 ### 调试接口连接
+
+
+<details>
+<summary>ESP32</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO14 |
+| SWDIO          | GPIO13 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+--------------
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO14  |
+| TMS                | GPIO13  |
+| TDI                | GPIO18  |
+| TDO                | GPIO19  |
+| nTRST \(optional\) | GPIO25  |
+| nRESET             | GPIO26  |
+| TVCC               | 3V3     |
+| GND                | GND     |
+
+</details>
 
 <details>
 <summary>ESP32C3</summary>
@@ -68,31 +96,6 @@
 | TVCC               | 3V3     |
 | GND                | GND     |
 
-
-</details>
-
-<details>
-<summary>ESP32</summary>
-
-| SWD            |        |
-|----------------|--------|
-| SWCLK          | GPIO14 |
-| SWDIO          | GPIO13 |
-| TVCC           | 3V3    |
-| GND            | GND    |
-
---------------
-
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO14  |
-| TMS                | GPIO13  |
-| TDI                | GPIO18  |
-| TDO                | GPIO19  |
-| nTRST \(optional\) | GPIO25  |
-| nRESET             | GPIO26  |
-| TVCC               | 3V3     |
-| GND                | GND     |
 
 </details>
 
@@ -157,9 +160,6 @@ idf.py -p /dev/ttyS5 flash
 
 
 > 位于项目根目录的`idf.py`脚本仅适用于较老的ESP8266设备，请不要在ESP32设备上使用。
-
-
-> 我们还提供了预编译固件用于快速评估。详见 [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
 
 </details>
 
@@ -228,17 +228,13 @@ idf.py -p /dev/ttyS5 flash
 ### 对于OpenOCD用户
 
 这个项目最初是为在Keil上运行而设计的，但现在你也可以在OpenOCD上通过它来烧录程序。
-注意，如果你想使用40MHz的SPI加速器，你需要在连接目标设备后指定速度，否则会在开始时失败。
 
 ```bash
-# 在使用flash指令前需要先运行：
-> adapter speed 10000
-
 > halt
 > flash write_image [erase] [unlock] filename [offset] [type]
 ```
 
-> Keil的操作时序与OpenOCD的有些不同。例如，OpenOCD在读取 "IDCODE "寄存器之前缺少SWD线复位序列。
+> 现已支持 pyOCD
 
 ### TCP转发的串口
 
@@ -278,4 +274,4 @@ TCP端口：1234
 
 
 ## 许可证
-[Apache 2.0 许可证](LICENSE)
+[MIT 许可证](LICENSE)
