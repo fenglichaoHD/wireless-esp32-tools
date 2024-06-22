@@ -11,7 +11,7 @@ file(GLOB SOURCES
 idf_component_register(
         SRCS ${SOURCES}
         INCLUDE_DIRS "."
-        PRIV_REQUIRES mdns esp_wifi esp_event api_router wt_storage
+        PRIV_REQUIRES mdns esp_wifi esp_event api_router wt_storage driver
 )
 
 idf_component_set_property(${COMPONENT_NAME} WHOLE_ARCHIVE ON)
