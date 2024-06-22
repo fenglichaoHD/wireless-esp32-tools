@@ -13,6 +13,7 @@
 #include "memory_pool.h"
 #include "request_runner.h"
 #include "uart_tcp_bridge.h"
+#include "global_module.h"
 
 #include <assert.h>
 
@@ -27,6 +28,9 @@ void app_main()
 
 	wifi_manager_init();
     DAP_Setup();
+
+	global_module_init();
+
 	start_webserver();
 
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);

@@ -8,6 +8,13 @@
 typedef struct api_json_req_t {
 	cJSON *in;
 	cJSON *out;
+	union {
+		struct {
+			uint8_t big_buffer: 1;
+			uint8_t reserved: 7;
+		};
+		uint8_t out_flag;
+	};
 } api_json_req_t;
 
 typedef struct api_json_module_req_t {
@@ -26,6 +33,9 @@ typedef enum api_json_req_status_e {
 	API_JSON_ASYNC = 1,
 	API_JSON_BAD_REQUEST = 2,
 	API_JSON_INTERNAL_ERR = 3,
+	API_JSON_UNSUPPORTED_CMD = 4,
+	API_JSON_PROPERTY_ERR = 5,
+	API_JSON_BUSY = 6,
 } api_json_req_status_e;
 
 typedef int (*api_json_on_req)(uint16_t cmd, api_json_req_t *req, api_json_module_async_t *rsp);
@@ -41,8 +51,8 @@ void api_json_module_dump();
 
 int api_json_module_add(api_json_init_func);
 
-#define API_JSON_MODULE_REGISTER(PRI, INIT) \
-  __attribute__((used, constructor(PRI))) void cons_ ## INIT(); \
+#define API_JSON_MODULE_REGISTER(INIT) \
+  __attribute__((used, constructor)) void cons_ ## INIT(); \
   void cons_ ## INIT() { api_json_module_add(INIT); }
 
 int api_json_module_call(uint8_t id, uint16_t cmd, api_json_req_t *in, api_json_module_async_t *out);

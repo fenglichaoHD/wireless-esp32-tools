@@ -130,6 +130,4 @@ static int wifi_api_json_init(api_json_module_cfg_t *cfg)
 	return 0;
 }
 
-API_JSON_MODULE_REGISTER(0x90, wifi_api_json_init)
-
-
+API_JSON_MODULE_REGISTER(wifi_api_json_init)

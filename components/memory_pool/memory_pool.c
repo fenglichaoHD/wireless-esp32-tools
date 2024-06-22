@@ -39,12 +39,15 @@ void *memory_pool_get(uint32_t tick_wait)
 {
 	void *ptr = NULL;
 	xQueueReceive(buf_queue, &ptr, tick_wait);
+	assert(ptr);
 	return ptr;
 }
 
 void memory_pool_put(void *ptr)
 {
-	//printf("put buf %d\n", uxQueueMessagesWaiting(buf_queue));
+#ifdef WT_DEBUG_MODE
+	printf("put buf %d\n", uxQueueMessagesWaiting(buf_queue));
+#endif
 	if (unlikely(xQueueSend(buf_queue, &ptr, 0) != pdTRUE)) {
 		assert(0);
 	}

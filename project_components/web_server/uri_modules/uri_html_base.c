@@ -20,9 +20,6 @@ httpd_resp_send(req, (const char *)filename##_start, file_size);                
 
 static esp_err_t html_base_get_handler(httpd_req_t *req)
 {
-	char *buf;
-	size_t buf_len;
-
 	/* this "hash" actually use the first 4 chars as an int32_t "hash" */
 	const int *URI_HASH = (const int *)req->uri;
 
