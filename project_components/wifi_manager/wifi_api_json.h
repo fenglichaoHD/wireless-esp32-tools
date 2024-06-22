@@ -1,4 +1,0 @@
-#ifndef WIFI_API_JSON_H_GUARD
-#define WIFI_API_JSON_H_GUARD
-
-#endif //WIFI_API_JSON_H_GUARD

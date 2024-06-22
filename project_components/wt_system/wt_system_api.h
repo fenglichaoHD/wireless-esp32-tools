@@ -7,7 +7,7 @@
 #ifndef WT_SYSTEM_API_H_GUARD
 #define WT_SYSTEM_API_H_GUARD
 
-#define SYSTEM_MODULE_ID 6
+#define SYSTEM_MODULE_ID 0
 
 typedef enum wt_system_cmd_t {
 	WT_SYS_GET_FM_INFO = 1,

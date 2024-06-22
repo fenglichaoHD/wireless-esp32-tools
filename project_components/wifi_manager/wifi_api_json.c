@@ -1,5 +1,3 @@
-#include "wifi_api_json.h"
-
 #include "api_json_module.h"
 #include "wifi_api.h"
 #include "wifi_json_utils.h"

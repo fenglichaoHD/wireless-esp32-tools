@@ -8,4 +8,4 @@ sdkconfig
 dependencies.lock
 package-lock.json
 managed_components/
-version.txt
+/version.txt

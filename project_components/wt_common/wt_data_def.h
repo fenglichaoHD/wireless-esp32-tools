@@ -9,33 +9,34 @@
 
 #include <stdint.h>
 
+#define DECLARE_HANDLE(name) struct name##__ { int unused[0]; }; \
+                             typedef struct name##__ *name
+
 typedef enum wt_data_type_t {
 	WT_DATA_RESERVED         = 0x00,
+	/* primitive type */
 	WT_DATA_EVENT            = 0x02,
+	WT_DATA_ROUTE_HDR        = 0x03,
+	WT_DATA_RAW_BROADCAST    = 0x04,
 
+	/* data_type */
 	/* broadcast data */
-	WT_DATA_RAW_BROADCAST    = 0x10,
 	WT_DATA_CMD_BROADCAST    = 0x11,
 
 	/* targeted data */
-	WT_DATA_ROUTE_HDR        = 0x20,
-	WT_DATA_RAW              = 0x21,
-	WT_DATA_CMD              = 0x22,
-	WT_DATA_RESPONSE         = 0x23,
+	WT_DATA_RAW              = 0x20,
+	WT_DATA_CMD              = 0x21,
+	WT_DATA_RESPONSE         = 0x22,
 
 	/* standard protocols */
 	WT_DATA_PROTOBUF         = 0x40,
 	WT_DATA_JSON             = 0x41,
 	WT_DATA_MQTT             = 0x42,
-
-	WT_USER_DATA_TYPE_BEGIN  = 0xA0,
-	WT_USER_DATA_TYPE_END    = 0xFE,
-	WT_DATA_TYPE_MAX         = 0xFF,
 } __attribute__((packed)) wt_data_type_t;
 _Static_assert(sizeof(wt_data_type_t) == 1, "wt_data_type_t must be 1 byte");
 
 typedef struct wt_bin_data_hdr_t {
-	wt_data_type_t data_type; /* type of the hdr+payload */
+	wt_data_type_t data_type; /* type of the payload */
 	union {
 		/* when targeted message -> bin data handle */
 		struct {
@@ -61,11 +62,16 @@ typedef struct wt_bin_data_internal_t {
 	struct {
 		uint64_t Dummy1;
 		uint64_t Dummy2;
-	} Dummy; /* 16 byte padding for httpd_ws_frame */
-	struct {
+	} ws_frame_slot; /* 16 byte padding for httpd_ws_frame */
+	struct { /*  */
 		uint16_t data_len;
 		uint8_t src_module;
 		uint8_t src_sub_module;
+	};
+	struct { /*  */
+		uint8_t send_count;
+		uint8_t reserved1;
+		uint16_t reserved2;
 	};
 	wt_bin_data_t data;
 } wt_bin_data_internal_t;
