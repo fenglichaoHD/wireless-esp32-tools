@@ -146,20 +146,19 @@ static esp_err_t ws_req_handler(httpd_req_t *req)
 	case HTTPD_WS_TYPE_CLOSE:
 		if ((err = httpd_ws_recv_frame(req, ws_pkt, 126)) != ESP_OK) {
 			ESP_LOGE(TAG, "Cannot receive the full CLOSE frame");
-			goto end;
 		}
 		return ws_on_close(req, ws_pkt, ws_msg);
 	case HTTPD_WS_TYPE_PING:
 		/* Now turn the frame to PONG */
-		ESP_LOGI(TAG, "PING received");
 		if ((err = httpd_ws_recv_frame(req, ws_pkt, 126)) != ESP_OK) {
 			ESP_LOGE(TAG, "Cannot receive the full PONG frame");
-			goto end;
+			return ws_on_close(req, ws_pkt, ws_msg);
 		}
 		ws_pkt->type = HTTPD_WS_TYPE_PONG;
 		err = ws_send_frame_safe(req->handle, httpd_req_to_sockfd(req), ws_pkt);
 		if (err) {
 			ESP_LOGE(TAG, "Cannot send PONG frame %s", esp_err_to_name(err));
+			return ws_on_close(req, ws_pkt, ws_msg);
 		}
 		goto end;
 	case HTTPD_WS_TYPE_PONG:
@@ -311,7 +310,16 @@ static void ws_async_resp(void *arg)
 void async_send_out_cb(void *arg, int module_status)
 {
 	ws_msg_t *req = arg;
+	cJSON_Delete(req->json.in);
+	ESP_LOGI(TAG, "send out %d", module_status);
+
 	if (module_status != API_JSON_OK) {
+		req->ws_pkt.payload = req->payload;
+		ws_set_err_msg(&req->ws_pkt, module_status);
+		int err = ws_send_frame_safe(req->hd, req->fd, &req->ws_pkt);
+		if (err) {
+			ESP_LOGE(TAG, "send out %s", esp_err_to_name(err));
+		}
 		goto end;
 	}
 
@@ -412,7 +420,7 @@ void heartbeat_task(void *arg)
 {
 	(void)arg;
 	while (1) {
-		vTaskDelay(pdMS_TO_TICKS(2000));
+		vTaskDelay(pdMS_TO_TICKS(1500));
 		ws_broadcast_heartbeat();
 	}
 };
