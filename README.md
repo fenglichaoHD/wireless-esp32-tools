@@ -65,16 +65,16 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 --------------
 
 
-| JTAG               |         |
-|--------------------|---------|
-| TCK                | GPIO6   |
-| TMS                | GPIO7   |
-| TDI                | GPIO9   |
-| TDO                | GPIO8   |
-| nTRST \(optional\) | GPIO4   |
-| nRESET             | GPIO5   |
-| TVCC               | 3V3     |
-| GND                | GND     |
+| JTAG               |        |
+|--------------------|--------|
+| TCK                | GPIO6  |
+| TMS                | GPIO7  |
+| TDI                | GPIO5  |
+| TDO                | GPIO3  |
+| nTRST \(optional\) | GPIO4  |
+| nRESET             | GPIO10 |
+| TVCC               | 3V3    |
+| GND                | GND    |
 
 
 </details>
@@ -279,6 +279,39 @@ Recv data   <-  TCP  <-  Uart Rx <- external devices
 
 When the TCP connection is established, bridge will try to resolve the text sent for the first packet. When the text is a valid baud rate, bridge will switch to it.
 For example, sending the ASCII text `115200` will switch the baud rate to 115200.
+
+<details>
+<summary>ESP32C3</summary>
+
+|     | PIN    |
+|-----|--------|
+| RX  | GPIO20 |
+| TX  | GPIO21 |
+
+</details>
+
+
+<details>
+<summary>ESP32</summary>
+
+|     | PIN    |
+|-----|--------|
+| RX  | GPIO22 |
+| TX  | GPIO23 |
+
+</details>
+
+<details>
+<summary>ESP32S3</summary>
+
+|     | PIN    |
+|-----|--------|
+| RX  | GPIO18 |
+| TX  | GPIO17 |
+
+
+
+</details>
 
 ------
 

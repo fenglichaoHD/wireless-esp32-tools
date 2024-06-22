@@ -41,6 +41,25 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #include "uart_tcp_bridge.h"
 
+#if defined CONFIG_IDF_TARGET_ESP32S3
+#define UART_PORT UART_NUM_1
+	#define UART_HW (&UART1)
+	#define PORT_RX_PIN 18
+	#define PORT_TX_PIN 17
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+	#define UART_PORT UART_NUM_0
+	#define UART_HW (&UART0)
+	#define PORT_RX_PIN 20
+	#define PORT_TX_PIN 21
+#elif defined CONFIG_IDF_TARGET_ESP32
+#define UART_PORT UART_NUM_2
+	#define UART_HW (&UART2)
+	#define PORT_RX_PIN 16
+	#define PORT_TX_PIN 17
+#else
+#error "Unknown target"
+#endif
+
 #ifdef CONFIG_IDF_TARGET_ESP8266
     #define UART_BRIDGE_TX UART_NUM_0
     #define UART_BRIDGE_RX UART_NUM_1
@@ -52,8 +71,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     #define UART_BRIDGE_TX UART_NUM_1
     #define UART_BRIDGE_RX UART_NUM_1
-    #define UART_BRIDGE_TX_PIN 19
-    #define UART_BRIDGE_RX_PIN 18 // PIN18 has 50000ns glitch during the power-up
+    #define UART_BRIDGE_TX_PIN 21
+    #define UART_BRIDGE_RX_PIN 20
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 	#define UART_BRIDGE_TX UART_NUM_1
     #define UART_BRIDGE_RX UART_NUM_1
