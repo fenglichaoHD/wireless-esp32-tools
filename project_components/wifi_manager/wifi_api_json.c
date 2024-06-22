@@ -55,7 +55,7 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_module_async_
 	}
 
 	ESP_LOGI(TAG, "cmd %d not executed\n", cmd);
-	return API_JSON_BAD_REQUEST;
+	return API_JSON_UNSUPPORTED_CMD;
 }
 
 static int wifi_api_json_sta_get_ap_info(api_json_req_t *req)

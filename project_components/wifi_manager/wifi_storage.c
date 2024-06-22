@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-#define NVS_NAMESPACE "wt_wifi"
+#define WIFI_NVS_NAMESPACE "wt_wifi"
 
 int wifi_data_get_last_conn_cred(wifi_credential_t *ap_credential)
 {
@@ -12,7 +12,7 @@ int wifi_data_get_last_conn_cred(wifi_credential_t *ap_credential)
 	nvs_handle_t handle;
 	int err;
 
-	err = wt_nvs_open(NVS_NAMESPACE, &handle);
+	err = wt_nvs_open(WIFI_NVS_NAMESPACE, &handle);
 	if (err) {
 		return WT_NVS_ERR;
 	}
@@ -41,7 +41,7 @@ int wifi_save_ap_credential(wifi_credential_t *ap_credential)
 	int err;
 	nvs_handle_t handle;
 
-	err = wt_nvs_open(NVS_NAMESPACE, &handle);
+	err = wt_nvs_open(WIFI_NVS_NAMESPACE, &handle);
 	if (err) {
 		return err;
 	}
