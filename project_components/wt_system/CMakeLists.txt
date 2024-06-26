@@ -10,7 +10,7 @@ idf_component_register(
 
 # Execute the Git command to get the formatted commit date
 execute_process(
-        COMMAND git show -s --format=%cd --date=format:'%Y-%m-%d'
+        COMMAND git show -s --format=%cd --date=format:%Y-%m-%d
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         OUTPUT_VARIABLE FM_DATE
         RESULT_VARIABLE result
@@ -21,6 +21,8 @@ execute_process(
 if(NOT "${result}" STREQUAL "0")
     message(WARNING "Git command failed with: ${git_error}")
 endif()
+
+message(STATUS FM_DATE:${FM_DATE})
 
 target_compile_definitions(${COMPONENT_LIB} PRIVATE FW_UPD_DATE="${FM_DATE}")
 idf_component_set_property(${COMPONENT_NAME} WHOLE_ARCHIVE ON)
