@@ -14,6 +14,10 @@
 #include <lwip/ip4_addr.h>
 #include <string.h>
 #include <assert.h>
+#include <hal/gpio_types.h>
+#include <driver/ledc.h>
+#include <hal/gpio_hal.h>
+#include <soc/ledc_periph.h>
 
 #define TAG __FILENAME__
 
@@ -49,10 +53,16 @@ static void set_sta_cred(const char *ssid, const char *password);
 static void disconn_handler(void);
 static int set_default_sta_cred(void);
 
+static void wifi_led_init();
+static void wifi_led_set_blink();
+static void wifi_led_set_on();
+
 void wifi_manager_init(void)
 {
 	esp_err_t err;
 	uint8_t do_connect = 0;
+	wifi_led_init();
+	wifi_led_set_blink();
 
 	ap_netif = esp_netif_create_default_wifi_ap();
 	assert(ap_netif);
@@ -121,6 +131,55 @@ void wifi_manager_init(void)
 	if (do_connect) {
 		disconn_handler();
 	}
+}
+
+void wifi_led_init()
+{
+#if WIFI_LED_ENABLE
+	ledc_timer_config_t ledc_timer = {
+		.duty_resolution = LEDC_TIMER_14_BIT, // resolution of PWM duty
+		.freq_hz = 5,                      // frequency of PWM signal
+		.speed_mode = LEDC_LOW_SPEED_MODE,           // timer mode
+		.timer_num = LEDC_TIMER_0,            // timer index
+		.clk_cfg = LEDC_USE_APB_CLK,              // Auto select the source clock
+	};
+	ledc_timer_config(&ledc_timer);
+
+	ledc_channel_config_t ledc_channel = {
+		.channel    = LEDC_CHANNEL_0,
+		.duty       = 0,
+		.gpio_num   = WIFI_LED_PIN,
+		.speed_mode = LEDC_LOW_SPEED_MODE,
+		.hpoint     = 1,
+		.timer_sel  = LEDC_TIMER_0,
+		.flags.output_invert = 0
+	};
+
+	ledc_channel_config(&ledc_channel);
+	ledc_fade_func_install(0);
+
+	gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[WIFI_LED_PIN], PIN_FUNC_GPIO);
+	gpio_set_direction(WIFI_LED_PIN, GPIO_MODE_OUTPUT_OD);
+	gpio_set_direction(WIFI_LED_PIN, GPIO_FLOATING);
+	esp_rom_gpio_connect_out_signal(WIFI_LED_PIN, ledc_periph_signal[LEDC_LOW_SPEED_MODE].sig_out0_idx + LEDC_CHANNEL_0,
+	                                1, 0);
+#endif
+}
+
+
+static void wifi_led_set_blink()
+{
+#if WIFI_LED_ENABLE
+	ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1 << 12), 0);
+#endif
+}
+
+
+static void wifi_led_set_on()
+{
+#if WIFI_LED_ENABLE
+	ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1 << 14)-1, 0);
+#endif
 }
 
 /**
@@ -270,6 +329,7 @@ int wifi_manager_connect(const char *ssid, const char *password)
 	}
 
 	/* connection success: overwrite last connected credential */
+	wifi_led_set_on();
 	wifi_credential_t credential;
 	memcpy(credential.ssid, ssid, 32);
 	memcpy(credential.password, password, 64);
@@ -317,6 +377,9 @@ static void reconnection_task(void *arg)
 		ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(20000));
 		if (ctx.conn.event || ctx.auto_reconnect == 0) {
 			/* reconnection successful or stop reconnect */
+			if (ctx.conn.event) {
+				wifi_led_set_on();
+			}
 			break;
 		}
 
@@ -342,7 +405,7 @@ static void disconn_handler(void)
 	 * 2. WI-FI AP or AP device is closed
 	 * 3. this device is ejected by AP
 	 * */
-
+	wifi_led_set_blink();
 	if (ctx.auto_reconnect == 0) {
 		return;
 	}

@@ -12,6 +12,16 @@
 #define WIFI_DEFAULT_STA_SSID "example_ssid"
 #define WIFI_DEFAULT_STA_PASS "12345678"
 
+#if defined CONFIG_IDF_TARGET_ESP32
+	#define WIFI_LED_ENABLE 0
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+	#define WIFI_LED_ENABLE 0
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+	#define WIFI_LED_ENABLE 0
+#endif
+
+#define WIFI_LED_PIN 9
+
 #define IP4_ADDR_EXPAND(...) IP4_ADDR(__VA_ARGS__)
 
 #endif //WIFI_CONFIGURATION_H_GUARD
