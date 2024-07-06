@@ -20,6 +20,9 @@ int wt_nvs_get(nvs_handle_t handle, uint32_t key, void *data, uint32_t data_size
 
 int wt_nvs_set(nvs_handle_t handle, uint32_t key, void *data, uint32_t data_size);
 
+int wt_nvs_get_once(const char* namespace, const uint32_t key, void *data, uint32_t data_size);
+int wt_nvs_set_once(const char* namespace, const uint32_t key, void *data, uint32_t data_size);
+
 int wt_nvs_flush(nvs_handle_t handle);
 
 void wt_nvs_init();

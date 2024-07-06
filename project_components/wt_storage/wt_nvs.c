@@ -95,3 +95,21 @@ int wt_nvs_get_once(const char* namespace, const uint32_t key, void *data, uint3
 	wt_nvs_close(handle);
 	return 0;
 }
+
+int wt_nvs_set_once(const char* namespace, const uint32_t key, void *data, uint32_t data_size)
+{
+	nvs_handle_t handle;
+	int err;
+	err = wt_nvs_open(namespace, &handle);
+	if (err) {
+		return err;
+	}
+
+	err = wt_nvs_set(handle, key, data, data_size);
+	if (err) {
+		return err;
+	}
+
+	wt_nvs_close(handle);
+	return 0;
+}
