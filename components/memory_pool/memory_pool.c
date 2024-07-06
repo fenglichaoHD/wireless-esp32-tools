@@ -8,7 +8,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/queue.h>
 
-#define BUFFER_NR 8
+#define BUFFER_NR 7
 #define BUFFER_SZ 2048
 
 static uint8_t buf[BUFFER_NR][BUFFER_SZ];

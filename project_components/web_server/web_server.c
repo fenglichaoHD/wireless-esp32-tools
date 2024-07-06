@@ -1,5 +1,6 @@
 #include "web_server.h"
 #include "web_uri_module.h"
+#include "ssdp.h"
 
 #include <esp_http_server.h>
 #include <esp_event.h>

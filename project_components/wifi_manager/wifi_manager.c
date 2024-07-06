@@ -19,6 +19,8 @@
 #include <hal/gpio_hal.h>
 #include <soc/ledc_periph.h>
 
+#include "ssdp.h"
+
 #define TAG __FILENAME__
 
 typedef struct wifi_ctx_t {
@@ -131,6 +133,9 @@ void wifi_manager_init(void)
 	if (do_connect) {
 		disconn_handler();
 	}
+
+	ssdp_init();
+	ssdp_start();
 }
 
 void wifi_led_init()

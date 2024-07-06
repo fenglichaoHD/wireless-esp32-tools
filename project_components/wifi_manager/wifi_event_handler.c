@@ -7,6 +7,9 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
+#include "ssdp.h"
+#include "wifi_configuration.h"
+
 #define TAG __FILE_NAME__
 
 void event_on_connected(ip_event_got_ip_t *event);
@@ -22,11 +25,18 @@ void ip_event_handler(void *handler_arg __attribute__((unused)),
 		printf("STA GOT IP : %s\n",
 		       ip4addr_ntoa((const ip4_addr_t *) &event->ip_info.ip));
 		event_on_connected(event);
+		ssdp_set_ip_gw(&event->ip_info.ip.addr, &event->ip_info.gw.addr);
 		break;
 	}
-	case IP_EVENT_STA_LOST_IP:
+	case IP_EVENT_STA_LOST_IP: {
 		printf("sta lost ip\n");
+		ip4_addr_t ip;
+		ip4_addr_t gw;
+		IP4_ADDR_EXPAND(&ip, WIFI_DEFAULT_AP_IP);
+		IP4_ADDR_EXPAND(&gw, WIFI_DEFAULT_AP_GATEWAY);
+		ssdp_set_ip_gw(&ip.addr, &gw.addr);
 		break;
+	}
 	case IP_EVENT_AP_STAIPASSIGNED:
 		printf("event STAIPASSIGNED\n");
 		break;

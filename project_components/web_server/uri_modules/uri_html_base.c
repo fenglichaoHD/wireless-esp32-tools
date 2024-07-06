@@ -1,12 +1,16 @@
 #include "web_uri_module.h"
+#include "ssdp.h"
 
 #include <esp_http_server.h>
 #include <esp_log.h>
+#include "memory_pool.h"
 
 #define TAG __FILE_NAME__
 
-#define URI_ROOT          0x0000002F /* /    */
-#define URI_WS_DOT        0x2E73772F /* /ws. */
+#define MAKE_U32(b0, b1, b2, b3) ((b0) | (b1) << 8 | (b2) << 16 | (b3)  << 24)
+#define URI_ROOT MAKE_U32  ('/', '\0', '\0', '\0')/* /    */
+#define URI_WS_DOT MAKE_U32('/', 'w', 's', '.') /* /ws. */
+#define URI_SSDP MAKE_U32  ('/', 'S', 'S', 'D')   /* /SSD */
 
 #define HTML_INDEX "index_html_gz"
 #define JS_WS_SHARED "ws_sharedworker_js_gz"
@@ -29,6 +33,11 @@ static esp_err_t html_base_get_handler(httpd_req_t *req)
 		httpd_resp_set_type(req, "text/javascript");
 		httpd_resp_set_hdr(req, "Content-encoding", "gzip");
 		SEND_FILE(req, JS_WS_SHARED);
+	} else if (*URI_HASH == URI_SSDP) {
+		httpd_resp_set_type(req, "text/xml");
+		char *buf = memory_pool_get(portMAX_DELAY);
+		ssdp_get_schema_str(buf, memory_pool_get_buf_size());
+		httpd_resp_send(req, buf, strlen(buf));
 	} else {
 		httpd_resp_set_type(req, "text/html");
 		httpd_resp_set_hdr(req, "Content-encoding", "gzip");
