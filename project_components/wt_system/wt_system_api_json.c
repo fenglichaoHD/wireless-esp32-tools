@@ -28,6 +28,11 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_module_async_
 	case WT_SYS_REBOOT:
 		wt_system_reboot();
 		return API_JSON_OK;
+	case WT_SYS_DO_CRASH: {
+		int *ptr = NULL;
+		*ptr = 66;
+		break;
+	}
 	}
 	return API_JSON_UNSUPPORTED_CMD;
 }

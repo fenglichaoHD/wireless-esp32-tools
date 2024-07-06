@@ -12,6 +12,8 @@
 typedef enum wt_system_cmd_t {
 	WT_SYS_GET_FM_INFO = 1,
 	WT_SYS_REBOOT = 2,
+
+	WT_SYS_DO_CRASH = 200,
 } wt_system_cmd_t;
 
 
