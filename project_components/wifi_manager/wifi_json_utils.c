@@ -21,6 +21,9 @@ cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info, wifi_api_jso
 	cJSON_AddStringToObject(root, "netmask", ip4addr_ntoa(&ap_info->netmask));
 	cJSON_AddNumberToObject(root, "rssi", ap_info->rssi);
 	cJSON_AddStringToObject(root, "ssid", ap_info->ssid);
+	if (ap_info->password[0]) {
+		cJSON_AddStringToObject(root, "password", ap_info->password);
+	}
 
 	char mac_str[18];
 	char *m = ap_info->mac;
@@ -31,7 +34,7 @@ cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info, wifi_api_jso
 	return root;
 }
 
-cJSON *wifi_api_json_serialize_scan_list(wifi_api_ap_info_t *aps_info, uint16_t count)
+cJSON *wifi_api_json_serialize_scan_list(wifi_api_ap_scan_info_t *aps_info, uint16_t count)
 {
 	cJSON *root;
 	char mac_str[18];
@@ -109,4 +112,21 @@ cJSON *wifi_api_json_add_int_item(cJSON *root, const char *name, int item)
 {
 	cJSON_AddNumberToObject(root, name, item);
 	return root;
+}
+
+int wifi_api_json_get_credential(cJSON *root, char *ssid, char *password)
+{
+	cJSON *json_ssid = cJSON_GetObjectItem(root, "ssid");
+	cJSON *json_password = cJSON_GetObjectItem(root, "password");
+
+	if (!cJSON_IsString(json_ssid) || !cJSON_IsString(json_password)) {
+		return 1;
+	}
+
+	strncpy(ssid, cJSON_GetStringValue(json_ssid), 31);
+	strncpy(password, cJSON_GetStringValue(json_password), 63);
+
+	ssid[31] = '\0';
+	password[64] = '\0';
+	return 0;
 }

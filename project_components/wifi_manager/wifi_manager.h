@@ -3,6 +3,7 @@
 
 #include <esp_wifi_types.h>
 #include "wifi_api.h"
+#include "wifi_storage.h"
 
 void wifi_manager_init();
 
@@ -18,7 +19,7 @@ int wifi_manager_change_mode(wifi_apsta_mode_e mode);
 int wifi_manager_get_mode(wifi_apsta_mode_e *mode, wifi_mode_t *status);
 int wifi_manager_get_ap_auto_delay(int *ap_on_delay, int *ap_off_delay);
 int wifi_manager_set_ap_auto_delay(int *ap_on_delay, int *ap_off_delay);
-
+int wifi_manager_set_ap_credential(wifi_credential_t *cred);
 
 
 #endif //WIFI_MANAGER_H_GUARD

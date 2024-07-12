@@ -94,29 +94,33 @@ void wifi_manager_init(void)
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &ip_event_handler, NULL, NULL));
 
 	ctx.is_sta_connected = false;
-	ctx.permanent_mode = WIFI_AP_AUTO_STA_ON;
-	ctx.mode = WIFI_MODE_APSTA;
 	ctx.ap_on_delay_tick = pdMS_TO_TICKS(5000);
 	ctx.ap_off_delay_tick = pdMS_TO_TICKS(10000);
 	ctx.delayed_stopAP_task = NULL;
 	ctx.delayed_startAP_task = NULL;
 	ctx.try_connect_count = 0;
 
+	err = wifi_data_get_wifi_mode(&ctx.permanent_mode);
+	if (err) {
+		ESP_LOGI(TAG, "use default mode: %d", ctx.permanent_mode);
+		ctx.permanent_mode = WIFI_AP_AUTO_STA_ON;
+		ctx.mode = WIFI_MODE_APSTA;
+	} else {
+		ctx.mode = ctx.permanent_mode & 0x3; /* 0b1XX */
+	}
+
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 	ESP_ERROR_CHECK(esp_wifi_set_mode(ctx.mode));
 	ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
-	{
-		wifi_config_t ap_config = {0};
-
-		strncpy((char *)ap_config.ap.ssid, WIFI_DEFAULT_AP_SSID, 32);
-		strncpy((char *)ap_config.ap.password, WIFI_DEFAULT_AP_PASS, 64);
-		ap_config.ap.authmode = WIFI_AUTH_WPA2_WPA3_PSK;
-		ap_config.ap.max_connection = 4;
-		ap_config.ap.channel = 6;
-		ap_config.ap.ssid_hidden = 0;
-		ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+	wifi_credential_t cred;
+	err = wifi_data_get_ap_credential(&cred);
+	if (err || strlen(cred.password) < 8) {
+		ESP_LOGI(TAG, "used default AP credential");
+		strncpy((char *)cred.ssid, WIFI_DEFAULT_AP_SSID, 32);
+		strncpy((char *)cred.password, WIFI_DEFAULT_AP_PASS, 64);
 	}
+	wifi_manager_set_ap_credential(&cred);
 
 	if (set_default_sta_cred() == 0) {
 		ESP_LOGI(TAG, "STA connect to saved cred");
@@ -318,7 +322,7 @@ int set_default_sta_cred()
 {
 	int err;
 	wifi_credential_t credential;
-	err = wifi_data_get_last_conn_cred(&credential);
+	err = wifi_data_get_sta_last_conn_cred(&credential);
 	if (err) {
 		return err;
 	}
@@ -362,7 +366,7 @@ int wifi_manager_connect(const char *ssid, const char *password)
 	wifi_credential_t credential;
 	memcpy(credential.ssid, ssid, 32);
 	memcpy(credential.password, password, 64);
-	ret = wifi_save_ap_credential(&credential);
+	ret = wifi_data_save_sta_ap_credential(&credential);
 	if (ret) {
 		ESP_LOGE(TAG, "nvs save error: %s", esp_err_to_name(ret));
 	}
@@ -630,5 +634,18 @@ int wifi_manager_get_mode(wifi_apsta_mode_e *mode, wifi_mode_t *status)
 {
 	*mode = ctx.permanent_mode;
 	*status = ctx.mode;
+	return 0;
+}
+
+int wifi_manager_set_ap_credential(wifi_credential_t *cred)
+{
+	wifi_config_t ap_config = {0};
+	strncpy((char *)ap_config.ap.ssid, cred->ssid, 32);
+	strncpy((char *)ap_config.ap.password, cred->password, 64);
+	ap_config.ap.authmode = WIFI_AUTH_WPA2_WPA3_PSK;
+	ap_config.ap.max_connection = 4;
+	ap_config.ap.channel = 6;
+	ap_config.ap.ssid_hidden = 0;
+	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
 	return 0;
 }

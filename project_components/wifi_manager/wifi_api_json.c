@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <esp_log.h>
 
+#include "wifi_storage.h"
+
 #define TAG __FILENAME__
 
 static int wifi_api_json_sta_get_ap_info(api_json_req_t *req);
@@ -21,6 +23,7 @@ static int wifi_api_json_ap_get_info(api_json_req_t *req);
 static int wifi_api_json_set_mode(api_json_req_t *req);
 
 static int wifi_api_json_get_mode(api_json_req_t *req);
+static int wifi_api_json_set_ap_cred(api_json_req_t *req);
 
 /* the upper caller call cb() with void *, this let us use custom function arg */
 static int async_helper_cb(void *arg)
@@ -59,11 +62,26 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_module_async_
 		return wifi_api_json_get_mode(req);
 	case WIFI_API_JSON_SET_MODE:
 		return wifi_api_json_set_mode(req);
+	case WIFI_API_JSON_SET_AP_CRED:
+		return wifi_api_json_set_ap_cred(req);
 	}
 
 	ESP_LOGI(TAG, "cmd %d not executed\n", cmd);
 	return API_JSON_UNSUPPORTED_CMD;
 }
+
+/* ****
+ *  register module
+ * */
+static int wifi_api_json_init(api_json_module_cfg_t *cfg)
+{
+	cfg->on_req = on_json_req;
+	cfg->module_id = WIFI_MODULE_ID;
+	return 0;
+}
+
+API_JSON_MODULE_REGISTER(wifi_api_json_init)
+
 
 static int wifi_api_json_sta_get_ap_info(api_json_req_t *req)
 {
@@ -83,7 +101,7 @@ static int wifi_api_json_ap_get_info(api_json_req_t *req)
 
 static int wifi_api_json_get_scan(api_json_req_t *req)
 {
-	wifi_api_ap_info_t ap_info[20];
+	wifi_api_ap_scan_info_t ap_info[20];
 	uint16_t max_count = 20;
 	int err;
 
@@ -133,7 +151,6 @@ int wifi_api_json_set_mode(api_json_req_t *req)
 		return API_JSON_OK;
 	}
 	wifi_apsta_mode_e mode = value;
-	wifi_mode_t status;
 
 	err = wifi_manager_change_mode(mode);
 	if (err) {
@@ -181,15 +198,27 @@ int wifi_api_json_disconnect(api_json_req_t *req)
 	return wifi_api_disconnect();
 }
 
-/* ****
- *  register module
- * */
 
-static int wifi_api_json_init(api_json_module_cfg_t *cfg)
+int wifi_api_json_set_ap_cred(api_json_req_t *req)
 {
-	cfg->on_req = on_json_req;
-	cfg->module_id = WIFI_MODULE_ID;
+	wifi_credential_t credential;
+	int err;
+
+	err = wifi_api_json_get_credential(req->in, (char *)&credential.ssid, (char *)&credential.password);
+	if (err) {
+		return API_JSON_PROPERTY_ERR;
+	}
+
+	if (strlen(credential.password) < 8) {
+		req->out = wifi_api_json_create_err_rsp(req->in, "password < 8");
+		return API_JSON_OK;
+	}
+
+	err = wifi_data_save_ap_credential(&credential);
+	if (err) {
+		return API_JSON_INTERNAL_ERR;
+	}
+
+	wifi_manager_set_ap_credential(&credential);
 	return 0;
 }
-
-API_JSON_MODULE_REGISTER(wifi_api_json_init)
