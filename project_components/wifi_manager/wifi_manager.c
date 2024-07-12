@@ -20,6 +20,7 @@
 #include <soc/ledc_periph.h>
 
 #include "ssdp.h"
+#include "wifi_api.h"
 
 #define TAG __FILENAME__
 
@@ -40,10 +41,20 @@ typedef struct wifi_ctx_t {
 			uint8_t need_unlock; /* used when trigger connection from wifi_manager instead of wifi_api */
 		} conn;
 	};
-	uint8_t is_endless_connect:1;
-	uint8_t auto_reconnect:1;
-	uint8_t do_fast_connect:1; /* 0 delay connect on boot or just disconnected, else 5 seconds delay from each connection try */
-	uint8_t reserved:5;
+	struct {
+		uint8_t is_endless_connect: 1;
+		uint8_t auto_reconnect: 1;
+		uint8_t do_fast_connect: 1; /* 0 delay connect on boot or just disconnected, else 5 seconds delay from each connection try */
+		uint8_t is_sta_connected: 1;
+		uint8_t reserved: 4;
+	};
+	TaskHandle_t delayed_stopAP_task;
+	TaskHandle_t delayed_startAP_task;
+	uint32_t try_connect_count;
+	wifi_apsta_mode_e permanent_mode;
+	wifi_mode_t mode;
+	int ap_on_delay_tick;
+	int ap_off_delay_tick;
 } wifi_ctx_t;
 
 static esp_netif_t *ap_netif;
@@ -54,6 +65,9 @@ static wifi_ctx_t ctx;
 static void set_sta_cred(const char *ssid, const char *password);
 static void disconn_handler(void);
 static int set_default_sta_cred(void);
+static int set_wifi_mode(wifi_apsta_mode_e mode);
+static void handle_wifi_connected();
+
 
 static void wifi_led_init();
 static void wifi_led_set_blink();
@@ -79,15 +93,24 @@ void wifi_manager_init(void)
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
 	ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, ESP_EVENT_ANY_ID, &ip_event_handler, NULL, NULL));
 
+	ctx.is_sta_connected = false;
+	ctx.permanent_mode = WIFI_AP_AUTO_STA_ON;
+	ctx.mode = WIFI_MODE_APSTA;
+	ctx.ap_on_delay_tick = pdMS_TO_TICKS(5000);
+	ctx.ap_off_delay_tick = pdMS_TO_TICKS(10000);
+	ctx.delayed_stopAP_task = NULL;
+	ctx.delayed_startAP_task = NULL;
+	ctx.try_connect_count = 0;
+
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
-	ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
+	ESP_ERROR_CHECK(esp_wifi_set_mode(ctx.mode));
 	ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
 	{
 		wifi_config_t ap_config = {0};
 
-		strncpy((char *) ap_config.ap.ssid, WIFI_DEFAULT_AP_SSID, 32);
-		strncpy((char *) ap_config.ap.password, WIFI_DEFAULT_AP_PASS, 64);
+		strncpy((char *)ap_config.ap.ssid, WIFI_DEFAULT_AP_SSID, 32);
+		strncpy((char *)ap_config.ap.password, WIFI_DEFAULT_AP_PASS, 64);
 		ap_config.ap.authmode = WIFI_AUTH_WPA2_WPA3_PSK;
 		ap_config.ap.max_connection = 4;
 		ap_config.ap.channel = 6;
@@ -183,7 +206,7 @@ static void wifi_led_set_blink()
 static void wifi_led_set_on()
 {
 #if WIFI_LED_ENABLE
-	ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1 << 14)-1, 0);
+	ledc_set_duty_and_update(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (1 << 14) - 1, 0);
 #endif
 }
 
@@ -335,6 +358,7 @@ int wifi_manager_connect(const char *ssid, const char *password)
 
 	/* connection success: overwrite last connected credential */
 	wifi_led_set_on();
+	handle_wifi_connected();
 	wifi_credential_t credential;
 	memcpy(credential.ssid, ssid, 32);
 	memcpy(credential.password, password, 64);
@@ -345,6 +369,90 @@ int wifi_manager_connect(const char *ssid, const char *password)
 	return 0;
 }
 
+int wifi_manager_change_mode(wifi_apsta_mode_e mode)
+{
+	int err;
+	if (ctx.permanent_mode == mode) {
+		return 0;
+	}
+	err = xSemaphoreTake(ctx.lock, pdMS_TO_TICKS(2000));
+	if (err != pdTRUE) {
+		ESP_LOGE(TAG, "set mode take lock");
+		return 1;
+	}
+	if (ctx.delayed_stopAP_task) {
+		xTaskNotifyGive(ctx.delayed_stopAP_task);
+	}
+	if (ctx.delayed_startAP_task) {
+		xTaskNotifyGive(ctx.delayed_startAP_task);
+	}
+
+	err = set_wifi_mode(mode);
+	xSemaphoreGive(ctx.lock);
+	if (err)
+		return err;
+	return wifi_data_save_wifi_mode(mode);
+}
+
+int set_wifi_mode(wifi_apsta_mode_e mode)
+{
+	uint32_t new_mode = ctx.mode;
+	printf("change mode: %d\n", mode);
+
+	switch (mode) {
+	default:
+		return 1;
+	case WIFI_AP_AUTO_STA_ON:
+		if (ctx.is_sta_connected) {
+			new_mode = WIFI_MODE_STA;
+		} else {
+			new_mode = WIFI_MODE_APSTA;
+		}
+		ctx.permanent_mode = mode;
+		break;
+	case WIFI_AP_STA_OFF:
+	case WIFI_AP_ON_STA_OFF:
+	case WIFI_AP_OFF_STA_ON:
+	case WIFI_AP_STA_ON:
+		ctx.permanent_mode = mode;
+		new_mode = mode & (~WIFI_AP_STA_OFF);
+		break;
+
+	case WIFI_AP_STOP:
+		new_mode &= ~WIFI_MODE_AP;
+		break;
+	case WIFI_AP_START:
+		new_mode |= WIFI_MODE_AP;
+		break;
+	case WIFI_STA_STOP:
+		new_mode &= ~WIFI_MODE_STA;
+		break;
+	case WIFI_STA_START:
+		new_mode |= WIFI_MODE_STA;
+		break;
+	}
+
+	printf("set mode to %lx\n", new_mode);
+	if (new_mode == ctx.mode) {
+		return 0;
+	}
+
+	int err = esp_wifi_set_mode(new_mode);
+	if (err) {
+		printf("set mode ret err %x\n", err);
+		return err;
+	}
+
+	/* AP -> APSTA */
+	if (!(ctx.mode & WIFI_MODE_STA) && (new_mode & WIFI_MODE_STA)) {
+		printf("set mode reco\n");
+		disconn_handler();
+	}
+	ctx.mode = new_mode;
+	printf("set mode ret %x\n", err);
+	return err;
+}
+
 static void set_sta_cred(const char *ssid, const char *password)
 {
 	wifi_config_t wifi_config = {
@@ -353,10 +461,76 @@ static void set_sta_cred(const char *ssid, const char *password)
 			.sort_method = WIFI_CONNECT_AP_BY_SIGNAL,
 		},
 	};
-	memcpy((char *) wifi_config.sta.ssid, ssid, 32);
-	memcpy((char *) wifi_config.sta.password, password, 64);
+	memcpy((char *)wifi_config.sta.ssid, ssid, 32);
+	memcpy((char *)wifi_config.sta.password, password, 64);
 
 	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+}
+
+static void delayed_set_ap_stop(void *arg)
+{
+	uint32_t ret = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10000));
+	xSemaphoreTake(ctx.lock, pdMS_TO_TICKS(10000));
+	/* timeout: connected to STA without disconnection for 10 sec: close AP */
+	if (ret == 0) {
+		set_wifi_mode(WIFI_AP_STOP);
+		ctx.try_connect_count = 0;
+	}
+
+	ctx.delayed_stopAP_task = NULL;
+	xSemaphoreGive(ctx.lock);
+	vTaskDelete(NULL);
+}
+
+static void delayed_set_ap_start(void *arg)
+{
+	uint32_t ret = 0;
+
+	if (!(ctx.try_connect_count > 5)) {
+		ret = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10000));
+	}
+	xSemaphoreTake(ctx.lock, pdMS_TO_TICKS(10000));
+	/* timeout: connected to STA without disconnection for 10 sec: close AP */
+	/* or consecutive connect/disconnect */
+	if (ret == 0 && ctx.permanent_mode == WIFI_AP_AUTO_STA_ON) {
+		set_wifi_mode(WIFI_AP_START);
+		ctx.try_connect_count = 0;
+	}
+
+	ctx.delayed_startAP_task = NULL;
+	xSemaphoreGive(ctx.lock);
+	vTaskDelete(NULL);
+}
+
+static void handle_wifi_connected()
+{
+	ctx.is_sta_connected = true;
+	if (ctx.delayed_startAP_task) {
+		printf("clear start ap task");
+		xTaskNotifyGive(ctx.delayed_startAP_task);
+	}
+	if (ctx.permanent_mode != WIFI_AP_AUTO_STA_ON) {
+		return;
+	}
+	printf("stop ap task");
+	xTaskCreate(delayed_set_ap_stop, "stop ap", 4096,
+	            NULL, tskIDLE_PRIORITY + 1, &ctx.delayed_stopAP_task);
+}
+
+static void handle_wifi_disconnected()
+{
+	ctx.is_sta_connected = false;
+	if (ctx.delayed_stopAP_task) {
+		printf("clear stop ap task");
+		xTaskNotifyGive(ctx.delayed_stopAP_task);
+	}
+	if (ctx.permanent_mode != WIFI_AP_AUTO_STA_ON) {
+		return;
+	}
+	printf("start ap task");
+	ctx.try_connect_count++;
+	xTaskCreate(delayed_set_ap_start, "start ap", 4096,
+	            NULL, tskIDLE_PRIORITY + 1, &ctx.delayed_startAP_task);
 }
 
 static void reconnection_task(void *arg)
@@ -383,7 +557,9 @@ static void reconnection_task(void *arg)
 		if (ctx.conn.event || ctx.auto_reconnect == 0) {
 			/* reconnection successful or stop reconnect */
 			if (ctx.conn.event) {
+				/* sta connected */
 				wifi_led_set_on();
+				handle_wifi_connected();
 			}
 			break;
 		}
@@ -411,6 +587,7 @@ static void disconn_handler(void)
 	 * 3. this device is ejected by AP
 	 * */
 	wifi_led_set_blink();
+	handle_wifi_disconnected();
 	if (ctx.auto_reconnect == 0) {
 		return;
 	}
@@ -433,4 +610,25 @@ int wifi_manager_disconnect(void)
 {
 	ctx.auto_reconnect = 0;
 	return esp_wifi_disconnect();
+}
+
+int wifi_manager_get_ap_auto_delay(int *ap_on_delay, int *ap_off_delay)
+{
+	*ap_on_delay = pdTICKS_TO_MS(ctx.ap_on_delay_tick);
+	*ap_off_delay = pdTICKS_TO_MS(ctx.ap_off_delay_tick);
+	return 0;
+}
+
+int wifi_manager_set_ap_auto_delay(int *ap_on_delay, int *ap_off_delay)
+{
+	ctx.ap_on_delay_tick = pdMS_TO_TICKS(*ap_on_delay);
+	ctx.ap_on_delay_tick = pdMS_TO_TICKS(*ap_off_delay);
+	return wifi_manager_get_ap_auto_delay(ap_on_delay, ap_off_delay);
+}
+
+int wifi_manager_get_mode(wifi_apsta_mode_e *mode, wifi_mode_t *status)
+{
+	*mode = ctx.permanent_mode;
+	*status = ctx.mode;
+	return 0;
 }

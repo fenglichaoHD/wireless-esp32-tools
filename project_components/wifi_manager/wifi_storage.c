@@ -1,6 +1,7 @@
 #include "wifi_storage.h"
 #include "wifi_storage_priv.h"
 #include "wt_nvs.h"
+#include "wifi_api.h"
 
 #include <stdio.h>
 
@@ -68,6 +69,27 @@ int wifi_save_ap_credential(wifi_credential_t *ap_credential)
 	}
 
 	err = wt_nvs_set(handle, KEY_WIFI_STA_LAST_AP_CRED, ap_credential, sizeof(wifi_credential_t));
+	if (err) {
+		return err;
+	}
+
+	wt_nvs_close(handle);
+	return WT_NVS_OK;
+}
+
+int wifi_data_save_wifi_mode(wifi_apsta_mode_e mode)
+{
+	nvs_handle_t handle;
+	int err;
+
+	uint8_t mode_u8 = mode;
+
+	err = wt_nvs_open(WIFI_NVS_NAMESPACE, &handle);
+	if (err) {
+		return err;
+	}
+
+	err = wt_nvs_set(handle, KEY_WIFI_APSTA_MODE, &mode_u8, sizeof(mode_u8));
 	if (err) {
 		return err;
 	}

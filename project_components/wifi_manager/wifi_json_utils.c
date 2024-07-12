@@ -54,12 +54,59 @@ cJSON *wifi_api_json_serialize_scan_list(wifi_api_ap_info_t *aps_info, uint16_t 
 	return root;
 }
 
+cJSON *wifi_api_json_serialize_ap_auto(wifi_apsta_mode_e mode, int ap_on_delay, int ap_off_delay)
+{
+	cJSON *root;
+
+	root = cJSON_CreateObject();
+	wifi_api_json_set_header(root, WIFI_API_JSON_GET_SCAN);
+	cJSON_AddNumberToObject(root, "mode", mode);
+	cJSON_AddNumberToObject(root, "ap_on_delay", ap_on_delay);
+	cJSON_AddNumberToObject(root, "ap_off_delay", ap_off_delay);
+
+	return root;
+}
+
 cJSON *wifi_api_json_create_err_rsp(cJSON *req, const char *msg)
 {
 	cJSON *root;
 
 	root = cJSON_Duplicate(req, 1);
-	cJSON_AddStringToObject(root, "msg", msg);
+	cJSON_AddStringToObject(root, "err", msg);
 
+	return root;
+}
+
+int wifi_api_json_utils_get_int(cJSON *req, const char *name, int *out_value)
+{
+	cJSON *item = cJSON_GetObjectItemCaseSensitive(req, name);
+
+	if (!cJSON_IsNumber(item)) {
+		return 1;
+	}
+
+	*out_value = item->valueint;
+	return 0;
+}
+
+cJSON *wifi_api_json_serialize_get_mode(wifi_apsta_mode_e mode, int status, int ap_on_delay, int ap_off_delay)
+{
+	cJSON *root;
+
+	root = cJSON_CreateObject();
+	wifi_api_json_set_header(root, WIFI_API_JSON_GET_MODE);
+	cJSON_AddNumberToObject(root, "mode", mode);
+	cJSON_AddNumberToObject(root, "status", status);
+	if (ap_on_delay >= 0 && ap_off_delay >= 0) {
+		cJSON_AddNumberToObject(root, "ap_on_delay", ap_on_delay);
+		cJSON_AddNumberToObject(root, "ap_off_delay", ap_off_delay);
+	}
+
+	return root;
+}
+
+cJSON *wifi_api_json_add_int_item(cJSON *root, const char *name, int item)
+{
+	cJSON_AddNumberToObject(root, name, item);
 	return root;
 }

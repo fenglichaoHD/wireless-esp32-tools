@@ -1,6 +1,7 @@
 #include "api_json_module.h"
 #include "wifi_api.h"
 #include "wifi_json_utils.h"
+#include "wifi_manager.h"
 
 #include <stdio.h>
 #include <esp_log.h>
@@ -16,6 +17,10 @@ static int wifi_api_json_connect(api_json_req_t *req);
 static int wifi_api_json_disconnect(api_json_req_t *req);
 
 static int wifi_api_json_ap_get_info(api_json_req_t *req);
+
+static int wifi_api_json_set_mode(api_json_req_t *req);
+
+static int wifi_api_json_get_mode(api_json_req_t *req);
 
 /* the upper caller call cb() with void *, this let us use custom function arg */
 static int async_helper_cb(void *arg)
@@ -50,6 +55,10 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_module_async_
 		return wifi_api_json_disconnect(req);
 	case WIFI_API_JSON_AP_GET_INFO:
 		return wifi_api_json_ap_get_info(req);
+	case WIFI_API_JSON_GET_MODE:
+		return wifi_api_json_get_mode(req);
+	case WIFI_API_JSON_SET_MODE:
+		return wifi_api_json_set_mode(req);
 	}
 
 	ESP_LOGI(TAG, "cmd %d not executed\n", cmd);
@@ -111,6 +120,61 @@ int wifi_api_json_connect(api_json_req_t *req)
 
 	return wifi_api_json_sta_get_ap_info(req);
 };
+
+int wifi_api_json_set_mode(api_json_req_t *req)
+{
+	int value;
+	int err;
+
+	err = wifi_api_json_utils_get_int(req->in, "mode", &value);
+	if (err) {
+		req->out = wifi_api_json_create_err_rsp(req->in, "'mode' attribute missing");
+		ESP_LOGE(TAG, "ap stop: %s", esp_err_to_name(err));
+		return API_JSON_OK;
+	}
+	wifi_apsta_mode_e mode = value;
+	wifi_mode_t status;
+
+	err = wifi_manager_change_mode(mode);
+	if (err) {
+		req->out = wifi_api_json_create_err_rsp(req->in, "Change mode Failed");
+		ESP_LOGE(TAG, "ap stop: %s", esp_err_to_name(err));
+		return API_JSON_OK;
+	}
+
+	if (mode == WIFI_AP_AUTO_STA_ON) {
+		int ap_on_delay;
+		int ap_off_delay;
+		err = wifi_api_json_utils_get_int(req->in, "ap_on_delay", &ap_on_delay);
+		err |= wifi_api_json_utils_get_int(req->in, "ap_off_delay", &ap_off_delay);
+		if (err == 0) {
+			wifi_manager_set_ap_auto_delay(&ap_on_delay, &ap_off_delay);
+			req->out = wifi_api_json_serialize_ap_auto(mode, ap_on_delay, ap_off_delay);
+			return API_JSON_OK;
+		}
+	}
+
+	return API_JSON_OK;
+}
+
+int wifi_api_json_get_mode(api_json_req_t *req)
+{
+	wifi_apsta_mode_e mode;
+	wifi_mode_t status;
+	int ap_on_delay, ap_off_delay;
+
+	wifi_manager_get_mode(&mode, &status);
+	if (mode == WIFI_AP_AUTO_STA_ON) {
+		wifi_manager_get_ap_auto_delay(&ap_on_delay, &ap_off_delay);
+	} else {
+		ap_on_delay = -1;
+		ap_off_delay = -1;
+	}
+
+	req->out = wifi_api_json_serialize_get_mode(mode, status, ap_on_delay, ap_off_delay);
+	return API_JSON_OK;
+}
+
 
 int wifi_api_json_disconnect(api_json_req_t *req)
 {
