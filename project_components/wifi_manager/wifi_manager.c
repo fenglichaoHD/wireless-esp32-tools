@@ -118,9 +118,11 @@ void wifi_manager_init(void)
 	wifi_credential_t cred;
 	err = wifi_data_get_ap_credential(&cred);
 	if (err || strlen(cred.password) < 8) {
-		ESP_LOGI(TAG, "used default AP credential");
+		ESP_LOGI(TAG, "use default AP credential");
 		strncpy((char *)cred.ssid, WIFI_DEFAULT_AP_SSID, 32);
 		strncpy((char *)cred.password, WIFI_DEFAULT_AP_PASS, 64);
+	} else {
+		ESP_LOGI(TAG, "use AP credential %s, %s", cred.ssid, cred.password);
 	}
 	wifi_manager_set_ap_credential(&cred);
 
