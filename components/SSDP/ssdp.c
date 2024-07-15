@@ -321,7 +321,7 @@ int ssdp_get_friendly_name()
 int ssdp_set_friendly_name(const char *name)
 {
 	snprintf(ssdp_ctx.friendly_name, sizeof(ssdp_ctx.friendly_name),
-	         "%s", name);
+	         "%s-%02X-%02X", name, ssdp_ctx.uuid_end[1], ssdp_ctx.uuid_end[2]);
 	ssdp_ctx.friendly_name[sizeof(ssdp_ctx.friendly_name) - 1] = '\0';
 	return 0;
 }
