@@ -20,6 +20,7 @@
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
+#include "websocket_server.h"
 
 extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;
@@ -128,9 +129,7 @@ void tcp_server_task(void *pvParameters)
                     usbip_state = WAIT_IMPORT;
                 usbip_worker(tcp_rx_buffer, sizeof(tcp_rx_buffer), &usbip_state);
             } else if (header == 0x47455420) { // string "GET "
-#ifdef CONFIG_USE_WEBSOCKET_DAP
                 websocket_worker(kSock, tcp_rx_buffer, sizeof(tcp_rx_buffer));
-#endif
             } else {
                 printf("Unknown protocol\n");
             }
