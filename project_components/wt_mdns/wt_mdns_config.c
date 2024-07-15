@@ -15,15 +15,16 @@ void wt_mdns_init()
 	/* TODO: read instance description from NVS */
 	ESP_ERROR_CHECK(mdns_instance_name_set(MDSN_INSTANCE_DESC));
 
+	uint8_t mac[6];
+	esp_netif_get_mac(esp_netif_get_default_netif(), mac);
+
+	char value[64];
+	snprintf(value, 63, "允斯调试器-%02X-%02X", mac[4], mac[5]);
+	value[63] = '\0';
+
 	//structure with TXT records
 	mdns_txt_item_t serviceTxtData[] = {
-#if defined CONFIG_IDF_TARGET_ESP32S3
-		{"board", "esp32S3"},
-#elif defined CONFIG_IDF_TARGET_ESP32C3
-		{"board", "esp32c3"},
-#elif defined CONFIG_IDF_TARGET_ESP32
-		{"board", "esp32"},
-#endif
+		{"name", value},
 	};
 
 	//initialize service
