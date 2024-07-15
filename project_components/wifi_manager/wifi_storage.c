@@ -15,22 +15,27 @@ int wifi_data_get_sta_last_conn_cred(wifi_credential_t *ap_credential)
 
 	err = wt_nvs_open(WIFI_NVS_NAMESPACE, &handle);
 	if (err) {
-		return WT_NVS_ERR;
+		return err;
 	}
 
 	err = wt_nvs_get(handle, KEY_WIFI_STA_AP_BITMAP, &ap_bitmap, sizeof(ap_bitmap));
-	if (err || ap_bitmap == 0) {
-		return WT_NVS_ERR_NOT_FOUND;
+	if (err) {
+		goto end;
+	}
+	if (ap_bitmap == 0) {
+		err = WT_NVS_ERR_NOT_FOUND;
+		goto end;
 	}
 
 	err = wt_nvs_get(handle, KEY_WIFI_STA_LAST_AP_CRED,
-					 ap_credential, sizeof(wifi_credential_t));
+	                 ap_credential, sizeof(wifi_credential_t));
 	if (err) {
-		return WT_NVS_ERR;
+		goto end;
 	}
 
+end:
 	wt_nvs_close(handle);
-	return WT_NVS_OK;
+	return err;
 }
 
 /*
@@ -50,7 +55,7 @@ int wifi_data_save_sta_ap_credential(wifi_credential_t *ap_credential)
 	err = wt_nvs_get(handle, KEY_WIFI_STA_AP_BITMAP, &ap_bitmap, sizeof(ap_bitmap));
 	if (err) {
 		if (err != ESP_ERR_NVS_NOT_FOUND) {
-			return err;
+			goto end;
 		}
 		ap_bitmap = 0;
 	}
@@ -64,17 +69,18 @@ int wifi_data_save_sta_ap_credential(wifi_credential_t *ap_credential)
 	err = wt_nvs_get(handle, KEY_WIFI_STA_LAST_AP_CRED, &credential, sizeof(ap_bitmap));
 	if (err) {
 		if (err != ESP_ERR_NVS_NOT_FOUND) {
-			return err;
+			goto end;
 		}
 	}
 
 	err = wt_nvs_set(handle, KEY_WIFI_STA_LAST_AP_CRED, ap_credential, sizeof(wifi_credential_t));
 	if (err) {
-		return err;
+		goto end;
 	}
 
+end:
 	wt_nvs_close(handle);
-	return WT_NVS_OK;
+	return err;
 }
 
 int wifi_data_save_wifi_mode(wifi_apsta_mode_e mode)
@@ -90,12 +96,9 @@ int wifi_data_save_wifi_mode(wifi_apsta_mode_e mode)
 	}
 
 	err = wt_nvs_set(handle, KEY_WIFI_APSTA_MODE, &mode_u8, sizeof(mode_u8));
-	if (err) {
-		return err;
-	}
 
 	wt_nvs_close(handle);
-	return WT_NVS_OK;
+	return err;
 }
 
 int wifi_data_get_wifi_mode(wifi_apsta_mode_e *mode)
@@ -111,13 +114,10 @@ int wifi_data_get_wifi_mode(wifi_apsta_mode_e *mode)
 	}
 
 	err = wt_nvs_get(handle, KEY_WIFI_APSTA_MODE, &mode_u8, sizeof(mode_u8));
-	if (err) {
-		return err;
-	}
 
 	*mode = mode_u8;
 	wt_nvs_close(handle);
-	return WT_NVS_OK;
+	return err;
 }
 
 int wifi_data_save_ap_credential(wifi_credential_t *ap_credential)
@@ -131,12 +131,9 @@ int wifi_data_save_ap_credential(wifi_credential_t *ap_credential)
 	}
 
 	err = wt_nvs_set(handle, KEY_WIFI_AP_CRED, ap_credential, sizeof(wifi_credential_t));
-	if (err) {
-		return err;
-	}
 
 	wt_nvs_close(handle);
-	return 0;
+	return err;
 }
 
 int wifi_data_get_ap_credential(wifi_credential_t *ap_credential)
@@ -150,10 +147,63 @@ int wifi_data_get_ap_credential(wifi_credential_t *ap_credential)
 	}
 
 	err = wt_nvs_get(handle, KEY_WIFI_AP_CRED, ap_credential, sizeof(wifi_credential_t));
+
+	wt_nvs_close(handle);
+	return err;
+}
+
+int wifi_data_get_static(wifi_api_sta_ap_static_info_t *static_info)
+{
+	nvs_handle_t handle;
+	int err;
+
+	err = wt_nvs_open(WIFI_NVS_NAMESPACE, &handle);
 	if (err) {
 		return err;
 	}
 
+	err = wt_nvs_get(handle, KEY_WIFI_STA_STATIC_BASE,
+	                 static_info, sizeof(wifi_api_sta_ap_static_info_t));
+	if (err == ESP_ERR_NVS_NOT_FOUND) {
+		static_info->static_ip_en = 0;
+		static_info->static_dns_en = 0;
+		err = ESP_OK;
+	} else if (err) {
+		printf("err %d\n", err);
+		goto end;
+	}
+
+	if (static_info->static_ip_en > 1) {
+		static_info->static_ip_en = 0;
+	}
+	if (static_info->static_dns_en > 1) {
+		static_info->static_dns_en = 0;
+	}
+
+end:
 	wt_nvs_close(handle);
-	return 0;
+	return err;
+}
+
+int wifi_data_save_static(wifi_api_sta_ap_static_info_t *static_info)
+{
+	nvs_handle_t handle;
+	int err;
+
+	err = wt_nvs_open(WIFI_NVS_NAMESPACE, &handle);
+	if (err) {
+		return err;
+	}
+
+	err = wt_nvs_set(handle, KEY_WIFI_STA_STATIC_BASE,
+	                 static_info, sizeof(wifi_api_sta_ap_static_info_t));
+	if (err) {
+		goto end;
+	}
+
+	printf("static info saved\n");
+
+end:
+	wt_nvs_close(handle);
+	return err;
 }

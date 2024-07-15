@@ -14,5 +14,8 @@ cJSON *wifi_api_json_create_err_rsp(cJSON *req, const char *msg);
 cJSON *wifi_api_json_add_int_item(cJSON *root, const char *name, int item);
 int wifi_api_json_utils_get_int(cJSON *req, const char *name, int *out_value);
 int wifi_api_json_get_credential(cJSON *root, char *ssid, char *password);
+cJSON *wifi_api_json_ser_static_info(wifi_api_sta_ap_static_info_t *info);
+int wifi_api_json_deser_static_conf(cJSON *root, wifi_api_sta_ap_static_info_t *static_info);
+
 
 #endif //WIFI_JSON_UTILS_H_GUARD

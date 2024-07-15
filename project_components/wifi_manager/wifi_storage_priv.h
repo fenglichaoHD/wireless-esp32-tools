@@ -15,18 +15,17 @@ typedef enum wt_wifi_key_enum {
 
 
 	/* TODO: should have 1 for each AP */
-	KEY_WIFI_STA_USE_STATIC = 0x03, /* bit[0:31]=[IP, MASK, GATEWAY, DNS] */
-	KEY_WIFI_STA_STATIC_IP = 0x04, /* 4B */
-	KEY_WIFI_STA_STATIC_MASK = 0x05, /* 4B */
-	KEY_WIFI_STA_STATIC_GATEWAY = 0x06, /* 4B */
-	KEY_WIFI_STA_STATIC_DNS = 0x07, /* 4B */
+	KEY_WIFI_STA_USE_STATIC = 0x03, /* bit[0:31]=[IP, MASK, GATEWAY, DNS_MAIN, DNS_BACK] */
 
 	/* STA information */
 	KEY_WIFI_STA_LAST_AP_CRED = 0x08, /*!< ssid[32] + password[64] */
 	KEY_WIFI_STA_AP_BITMAP = 0x09, /* 32 bit */
 
+	KEY_WIFI_STA_STATIC_BASE = 0x10, /* [IP:4B, MASK:4B, GW:4B, DNS1:4B, DNS2:4B] = 20B */
+	KEY_WIFI_STA_STATIC_LAST = 0x1F, /* [IP:4B, MASK:4B, GW:4B, DNS1:4B, DNS2:4B] */
+
+	KEY_WIFI_APSTA_MODE = 0xFF, /* 1B */
 	KEY_UNUSED_100      = 0x0100, /* avoid: same as 0x1 */
-	KEY_WIFI_APSTA_MODE = 0x0101, /* 1B */
 } wt_wifi_key;
 
 #endif //WIFI_STORAGE_PRIV_H_GUARD

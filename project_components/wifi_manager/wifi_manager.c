@@ -66,8 +66,7 @@ static void set_sta_cred(const char *ssid, const char *password);
 static void disconn_handler(void);
 static int set_default_sta_cred(void);
 static int set_wifi_mode(wifi_apsta_mode_e mode);
-static void handle_wifi_connected();
-
+static void handle_wifi_connected(); /* got IP */
 
 static void wifi_led_init();
 static void wifi_led_set_blink();
@@ -101,12 +100,15 @@ void wifi_manager_init(void)
 	ctx.try_connect_count = 0;
 
 	err = wifi_data_get_wifi_mode(&ctx.permanent_mode);
+	ESP_LOGI(TAG, "use wifi mode: %d", ctx.permanent_mode);
 	if (err) {
-		ESP_LOGI(TAG, "use default mode: %d", ctx.permanent_mode);
 		ctx.permanent_mode = WIFI_AP_AUTO_STA_ON;
 		ctx.mode = WIFI_MODE_APSTA;
 	} else {
 		ctx.mode = ctx.permanent_mode & 0x3; /* 0b1XX */
+		if (ctx.mode == WIFI_MODE_STA || ctx.mode == WIFI_MODE_NULL) {
+			ctx.mode = WIFI_MODE_APSTA;
+		}
 	}
 
 	ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
@@ -126,6 +128,12 @@ void wifi_manager_init(void)
 		ESP_LOGI(TAG, "STA connect to saved cred");
 		do_connect = 1;
 		ctx.do_fast_connect = 1;
+	}
+
+	wifi_api_sta_ap_static_info_t static_info;
+	err = wifi_data_get_static(&static_info);
+	if (err == ESP_OK) {
+		wifi_manager_sta_set_static_conf(&static_info);
 	}
 
 	/* TODO: Read from nvs */
@@ -395,6 +403,9 @@ int wifi_manager_change_mode(wifi_apsta_mode_e mode)
 	xSemaphoreGive(ctx.lock);
 	if (err)
 		return err;
+	if (mode >= WIFI_AP_STOP){
+		return ESP_OK;
+	}
 	return wifi_data_save_wifi_mode(mode);
 }
 
@@ -450,6 +461,7 @@ int set_wifi_mode(wifi_apsta_mode_e mode)
 	/* AP -> APSTA */
 	if (!(ctx.mode & WIFI_MODE_STA) && (new_mode & WIFI_MODE_STA)) {
 		printf("set mode reco\n");
+		xSemaphoreGive(ctx.lock);
 		disconn_handler();
 	}
 	ctx.mode = new_mode;
@@ -468,14 +480,17 @@ static void set_sta_cred(const char *ssid, const char *password)
 	memcpy((char *)wifi_config.sta.ssid, ssid, 32);
 	memcpy((char *)wifi_config.sta.password, password, 64);
 
-	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+	int err = esp_wifi_set_config(WIFI_IF_STA, &wifi_config);
+	if (err) {
+		ESP_LOGE(TAG, "%s", esp_err_to_name(err));
+	}
 }
 
 static void delayed_set_ap_stop(void *arg)
 {
-	uint32_t ret = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(10000));
+	uint32_t ret = ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(30000));
 	xSemaphoreTake(ctx.lock, pdMS_TO_TICKS(10000));
-	/* timeout: connected to STA without disconnection for 10 sec: close AP */
+	/* timeout: connected to STA without disconnection: close AP */
 	if (ret == 0) {
 		set_wifi_mode(WIFI_AP_STOP);
 		ctx.try_connect_count = 0;
@@ -640,12 +655,55 @@ int wifi_manager_get_mode(wifi_apsta_mode_e *mode, wifi_mode_t *status)
 int wifi_manager_set_ap_credential(wifi_credential_t *cred)
 {
 	wifi_config_t ap_config = {0};
+	wifi_mode_t mode;
 	strncpy((char *)ap_config.ap.ssid, cred->ssid, 32);
 	strncpy((char *)ap_config.ap.password, cred->password, 64);
 	ap_config.ap.authmode = WIFI_AUTH_WPA2_WPA3_PSK;
 	ap_config.ap.max_connection = 4;
 	ap_config.ap.channel = 6;
 	ap_config.ap.ssid_hidden = 0;
-	ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+
+	if (esp_wifi_get_mode(&mode)) {
+		return 1;
+	}
+	if (mode & WIFI_MODE_AP) {
+		int err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+		if (err) {
+			ESP_LOGE(TAG, "ap conf %s", esp_err_to_name(err));
+		}
+	}
+
+	return 0;
+}
+
+int wifi_manager_sta_set_static_conf(wifi_api_sta_ap_static_info_t *static_info)
+{
+	if (static_info->static_ip_en) {
+		esp_netif_ip_info_t ip_info;
+		ip_info.ip.addr = static_info->ip.addr;
+		ip_info.gw.addr = static_info->gateway.addr;
+		ip_info.netmask.addr = static_info->netmask.addr;
+		esp_netif_dhcpc_stop(wifi_manager_get_sta_netif());
+		esp_netif_set_ip_info(wifi_manager_get_sta_netif(), &ip_info);
+	} else {
+		esp_netif_dhcpc_start(wifi_manager_get_sta_netif());
+	}
+
+	if (static_info->static_dns_en) {
+		esp_netif_dns_info_t dns_info;
+		dns_info.ip.type = ESP_IPADDR_TYPE_V4;
+		dns_info.ip.u_addr.ip4.addr = static_info->dns_main.addr;
+		esp_netif_set_dns_info(wifi_manager_get_sta_netif(), ESP_NETIF_DNS_MAIN, &dns_info);
+		dns_info.ip.u_addr.ip4.addr = static_info->dns_backup.addr;
+		esp_netif_set_dns_info(wifi_manager_get_sta_netif(), ESP_NETIF_DNS_BACKUP, &dns_info);
+	} else {
+		esp_netif_ip_info_t ip_info;
+		esp_netif_dns_info_t dns_info;
+		dns_info.ip.type = ESP_IPADDR_TYPE_V4;
+		esp_netif_get_ip_info(wifi_manager_get_sta_netif(), &ip_info);
+		dns_info.ip.u_addr.ip4.addr = ip_info.gw.addr;
+		dns_info.ip.type = ESP_NETIF_DNS_MAIN;
+		esp_netif_set_dns_info(wifi_manager_get_sta_netif(), ESP_NETIF_DNS_MAIN, &dns_info);
+	}
 	return 0;
 }

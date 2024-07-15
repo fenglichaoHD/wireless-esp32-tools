@@ -21,4 +21,9 @@ int wifi_data_get_ap_credential(wifi_credential_t *ap_credential);
 
 int wifi_data_save_ap_credential(wifi_credential_t *ap_credential);
 
+int wifi_data_get_static(wifi_api_sta_ap_static_info_t *static_info);
+
+int wifi_data_save_static(wifi_api_sta_ap_static_info_t *static_info);
+
+
 #endif //WIFI_STORAGE_H_GUARD

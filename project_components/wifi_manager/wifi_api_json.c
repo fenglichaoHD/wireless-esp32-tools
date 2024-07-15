@@ -24,6 +24,8 @@ static int wifi_api_json_set_mode(api_json_req_t *req);
 
 static int wifi_api_json_get_mode(api_json_req_t *req);
 static int wifi_api_json_set_ap_cred(api_json_req_t *req);
+static int wifi_api_json_sta_get_static_info(api_json_req_t *req);
+static int wifi_api_json_sta_set_static_conf(api_json_req_t *req);
 
 /* the upper caller call cb() with void *, this let us use custom function arg */
 static int async_helper_cb(void *arg)
@@ -64,6 +66,10 @@ static int on_json_req(uint16_t cmd, api_json_req_t *req, api_json_module_async_
 		return wifi_api_json_set_mode(req);
 	case WIFI_API_JSON_SET_AP_CRED:
 		return wifi_api_json_set_ap_cred(req);
+	case WIFI_API_JSON_STA_GET_STATIC_INFO:
+		return wifi_api_json_sta_get_static_info(req);
+	case WIFI_API_JSON_STA_SET_STATIC_CONF:
+		return wifi_api_json_sta_set_static_conf(req);
 	}
 
 	ESP_LOGI(TAG, "cmd %d not executed\n", cmd);
@@ -221,4 +227,31 @@ int wifi_api_json_set_ap_cred(api_json_req_t *req)
 
 	wifi_manager_set_ap_credential(&credential);
 	return 0;
+}
+
+int wifi_api_json_sta_get_static_info(api_json_req_t *req)
+{
+	wifi_api_sta_ap_static_info_t static_info = {0};
+	int err = wifi_data_get_static(&static_info);
+	if (err) {
+		return API_JSON_INTERNAL_ERR;
+	}
+
+	req->out = wifi_api_json_ser_static_info(&static_info);
+	return API_JSON_OK;
+}
+
+int wifi_api_json_sta_set_static_conf(api_json_req_t *req)
+{
+	wifi_api_sta_ap_static_info_t static_info = {0};
+	int err;
+	wifi_data_get_static(&static_info);
+
+	err = wifi_api_json_deser_static_conf(req->in, &static_info);
+	if (err) {
+		return API_JSON_PROPERTY_ERR;
+	}
+
+	wifi_api_sta_set_static_conf(&static_info);
+	return API_JSON_OK;
 }

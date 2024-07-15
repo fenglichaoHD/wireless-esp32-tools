@@ -20,6 +20,7 @@ int wifi_manager_get_mode(wifi_apsta_mode_e *mode, wifi_mode_t *status);
 int wifi_manager_get_ap_auto_delay(int *ap_on_delay, int *ap_off_delay);
 int wifi_manager_set_ap_auto_delay(int *ap_on_delay, int *ap_off_delay);
 int wifi_manager_set_ap_credential(wifi_credential_t *cred);
+int wifi_manager_sta_set_static_conf(wifi_api_sta_ap_static_info_t *static_info);
 
 
 #endif //WIFI_MANAGER_H_GUARD

@@ -19,6 +19,8 @@ cJSON *wifi_api_json_serialize_ap_info(wifi_api_ap_info_t *ap_info, wifi_api_jso
 	cJSON_AddStringToObject(root, "ip", ip4addr_ntoa(&ap_info->ip));
 	cJSON_AddStringToObject(root, "gateway", ip4addr_ntoa(&ap_info->gateway));
 	cJSON_AddStringToObject(root, "netmask", ip4addr_ntoa(&ap_info->netmask));
+	cJSON_AddStringToObject(root, "dns_main", ip4addr_ntoa(&ap_info->dns_main));
+	cJSON_AddStringToObject(root, "dns_backup", ip4addr_ntoa(&ap_info->dns_backup));
 	cJSON_AddNumberToObject(root, "rssi", ap_info->rssi);
 	cJSON_AddStringToObject(root, "ssid", ap_info->ssid);
 	if (ap_info->password[0]) {
@@ -128,5 +130,60 @@ int wifi_api_json_get_credential(cJSON *root, char *ssid, char *password)
 
 	ssid[31] = '\0';
 	password[64] = '\0';
+	return 0;
+}
+
+cJSON *wifi_api_json_ser_static_info(wifi_api_sta_ap_static_info_t *info)
+{
+	cJSON *root;
+
+	root = cJSON_CreateObject();
+	wifi_api_json_set_header(root, WIFI_API_JSON_STA_GET_STATIC_INFO);
+	cJSON_AddNumberToObject(root, "static_ip_en", info->static_ip_en);
+	cJSON_AddNumberToObject(root, "static_dns_en", info->static_dns_en);
+
+	cJSON_AddStringToObject(root, "ip", ip4addr_ntoa(&info->ip));
+	cJSON_AddStringToObject(root, "gateway", ip4addr_ntoa(&info->gateway));
+	cJSON_AddStringToObject(root, "netmask", ip4addr_ntoa(&info->netmask));
+	cJSON_AddStringToObject(root, "dns_main", ip4addr_ntoa(&info->dns_main));
+	cJSON_AddStringToObject(root, "dns_backup", ip4addr_ntoa(&info->dns_backup));
+
+	return root;
+}
+
+int wifi_api_json_deser_static_conf(cJSON *root, wifi_api_sta_ap_static_info_t *static_info)
+{
+	cJSON *static_ip_en = cJSON_GetObjectItemCaseSensitive(root, "static_ip_en");
+	cJSON *static_dns_en = cJSON_GetObjectItemCaseSensitive(root, "static_dns_en");
+
+	if (!cJSON_IsNumber(static_ip_en) || !cJSON_IsNumber(static_dns_en)) {
+		printf("en error\n");
+		return 1;
+	}
+
+	static_info->static_dns_en = static_dns_en->valueint;
+	static_info->static_ip_en = static_ip_en->valueint;
+
+	cJSON *ip = cJSON_GetObjectItemCaseSensitive(root, "ip");
+	cJSON *gateway = cJSON_GetObjectItemCaseSensitive(root, "gateway");
+	cJSON *netmask = cJSON_GetObjectItemCaseSensitive(root, "netmask");
+	cJSON *dns_main = cJSON_GetObjectItemCaseSensitive(root, "dns_main");
+	cJSON *dns_backup = cJSON_GetObjectItemCaseSensitive(root, "dns_backup");
+
+	if (cJSON_IsString(ip)) {
+		ip4addr_aton(ip->valuestring, &static_info->ip);
+	}
+	if (cJSON_IsString(gateway)) {
+		ip4addr_aton(gateway->valuestring, &static_info->gateway);
+	}
+	if (cJSON_IsString(netmask)) {
+		ip4addr_aton(netmask->valuestring, &static_info->netmask);
+	}
+	if (cJSON_IsString(dns_main)) {
+		ip4addr_aton(dns_main->valuestring, &static_info->dns_main);
+	}
+	if (cJSON_IsString(dns_backup)) {
+		ip4addr_aton(dns_backup->valuestring, &static_info->dns_backup);
+	}
 	return 0;
 }

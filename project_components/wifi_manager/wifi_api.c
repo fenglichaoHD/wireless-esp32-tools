@@ -6,7 +6,8 @@
 
 void wifi_api_sta_get_ap_info(wifi_api_ap_info_t *ap_info)
 {
-	wifi_ap_record_t ap_record;
+	wifi_ap_record_t ap_record = {0};
+	int err;
 	esp_wifi_sta_get_ap_info(&ap_record);
 	strncpy(ap_info->ssid, (char *)ap_record.ssid, sizeof(ap_info->ssid));
 	strncpy(ap_info->mac, (char *)ap_record.bssid, sizeof(ap_info->mac));
@@ -19,6 +20,23 @@ void wifi_api_sta_get_ap_info(wifi_api_ap_info_t *ap_info)
 	ip4_addr_set(&ap_info->ip, &ip_info.ip);
 	ip4_addr_set(&ap_info->gateway, &ip_info.gw);
 	ip4_addr_set(&ap_info->netmask, &ip_info.netmask);
+
+	esp_netif_dns_info_t dns_info;
+	err = esp_netif_get_dns_info(wifi_manager_get_sta_netif(),
+	                             ESP_NETIF_DNS_MAIN, &dns_info);
+	if (err) {
+		ap_info->dns_main.addr = ap_info->gateway.addr;
+	} else {
+		ap_info->dns_main.addr = dns_info.ip.u_addr.ip4.addr;
+	}
+
+	err = esp_netif_get_dns_info(wifi_manager_get_sta_netif(),
+	                             ESP_NETIF_DNS_BACKUP, &dns_info);
+	if (err) {
+		ap_info->dns_backup.addr = ap_info->gateway.addr;
+	} else {
+		ap_info->dns_backup.addr = dns_info.ip.u_addr.ip4.addr;
+	}
 }
 
 void wifi_api_ap_get_info(wifi_api_ap_info_t *ap_info)
@@ -37,6 +55,23 @@ void wifi_api_ap_get_info(wifi_api_ap_info_t *ap_info)
 	IP4_ADDR_EXPAND(&ap_info->gateway, WIFI_DEFAULT_AP_GATEWAY);
 	IP4_ADDR_EXPAND(&ap_info->netmask, WIFI_DEFAULT_AP_NETMASK);
 	ap_info->rssi = 0;
+
+	esp_netif_dns_info_t dns_info;
+	err = esp_netif_get_dns_info(wifi_manager_get_ap_netif(),
+	                             ESP_NETIF_DNS_MAIN, &dns_info);
+	if (err) {
+		ap_info->dns_main.addr = ap_info->gateway.addr;
+	} else {
+		ap_info->dns_main.addr = dns_info.ip.u_addr.ip4.addr;
+	}
+
+	err = esp_netif_get_dns_info(wifi_manager_get_ap_netif(),
+	                             ESP_NETIF_DNS_BACKUP, &dns_info);
+	if (err) {
+		ap_info->dns_backup.addr = ap_info->gateway.addr;
+	} else {
+		ap_info->dns_backup.addr = dns_info.ip.u_addr.ip4.addr;
+	}
 }
 
 static int rssi_comp(const void *a, const void *b)
@@ -102,4 +137,14 @@ int wifi_api_connect(const char *ssid, const char *password)
 int wifi_api_disconnect(void)
 {
 	return wifi_manager_disconnect();
+}
+
+int wifi_api_sta_set_static_conf(wifi_api_sta_ap_static_info_t *static_info)
+{
+	int err = wifi_manager_sta_set_static_conf(static_info);
+	if (err) {
+		return err;
+	}
+
+	return wifi_data_save_static(static_info);
 }

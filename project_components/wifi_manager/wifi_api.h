@@ -15,6 +15,8 @@ typedef enum wifi_api_json_cmd_t {
 	WIFI_API_JSON_GET_MODE        = 6, /* req:{ }, ret:{mode, [delay_off], [delay_on]} */
 	WIFI_API_JSON_SET_MODE        = 7, /* req:{mode, [delay_off], [delay_on]} */
 	WIFI_API_JSON_SET_AP_CRED     = 8, /* ssid[32] + password[64] */
+	WIFI_API_JSON_STA_GET_STATIC_INFO =  9,
+	WIFI_API_JSON_STA_SET_STATIC_CONF = 10, /* static_ip_en: 0/1, static_dns_en: 0/1 */
 } wifi_api_json_cmd_t;
 
 typedef struct wifi_api_ap_info_t {
@@ -25,6 +27,8 @@ typedef struct wifi_api_ap_info_t {
 	char password[64+1];
 	char mac[6];
 	signed char rssi;
+	ip4_addr_t dns_main;
+	ip4_addr_t dns_backup;
 } wifi_api_ap_info_t;
 
 typedef struct wifi_api_ap_scan_info_t {
@@ -35,6 +39,16 @@ typedef struct wifi_api_ap_scan_info_t {
 	char mac[6];
 	signed char rssi;
 } wifi_api_ap_scan_info_t;
+
+typedef struct wifi_api_sta_ap_static_info_t {
+	ip4_addr_t ip;
+	ip4_addr_t gateway;
+	ip4_addr_t netmask;
+	ip4_addr_t dns_main;
+	ip4_addr_t dns_backup;
+	uint8_t static_ip_en;
+	uint8_t static_dns_en;
+} wifi_api_sta_ap_static_info_t;
 
 typedef enum wifi_apsta_mode_e {
 	/* permanent */
@@ -65,6 +79,8 @@ int wifi_api_get_scan_list(uint16_t *number, wifi_api_ap_scan_info_t *ap_info);
 int wifi_api_connect(const char *ssid, const char *password);
 
 int wifi_api_disconnect(void);
+
+int wifi_api_sta_set_static_conf(wifi_api_sta_ap_static_info_t *static_info);
 
 
 #endif //WIFI_API_H_GUARD
